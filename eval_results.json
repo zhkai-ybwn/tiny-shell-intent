@@ -1,0 +1,1171 @@
+{
+  "timestamp": "2026-10-22 16:50:39",
+  "resource": {
+    "model_path": "models\\potion-base-2M",
+    "disk_size_bytes": 8010076,
+    "disk_size_mb": 7.64,
+    "file_breakdown": {
+      "config.json": "0.00 MB",
+      "model.safetensors": "7.21 MB",
+      "modules.json": "0.00 MB",
+      "README.md": "0.00 MB",
+      "tokenizer.json": "0.43 MB"
+    },
+    "load_time_ms": 895.47,
+    "memory_rss_before_mb": 53.97,
+    "memory_rss_after_mb": 97.12,
+    "memory_rss_delta_mb": 43.15
+  },
+  "accuracy": {
+    "rule": {
+      "top1_acc": 16.7,
+      "top3_acc": 16.7,
+      "breakdown_by_type": {
+        "natural_language": {
+          "total": 50,
+          "top1_acc": 0.0,
+          "top3_acc": 0.0
+        },
+        "abbreviation": {
+          "total": 12,
+          "top1_acc": 100.0,
+          "top3_acc": 100.0
+        },
+        "fuzzy_typo": {
+          "total": 10,
+          "top1_acc": 0.0,
+          "top3_acc": 0.0
+        }
+      }
+    },
+    "fuzzy": {
+      "top1_acc": 58.3,
+      "top3_acc": 86.1,
+      "breakdown_by_type": {
+        "natural_language": {
+          "total": 50,
+          "top1_acc": 50.0,
+          "top3_acc": 80.0
+        },
+        "abbreviation": {
+          "total": 12,
+          "top1_acc": 100.0,
+          "top3_acc": 100.0
+        },
+        "fuzzy_typo": {
+          "total": 10,
+          "top1_acc": 50.0,
+          "top3_acc": 100.0
+        }
+      }
+    },
+    "model": {
+      "top1_acc": 65.3,
+      "top3_acc": 80.6,
+      "breakdown_by_type": {
+        "natural_language": {
+          "total": 50,
+          "top1_acc": 70.0,
+          "top3_acc": 88.0
+        },
+        "abbreviation": {
+          "total": 12,
+          "top1_acc": 75.0,
+          "top3_acc": 75.0
+        },
+        "fuzzy_typo": {
+          "total": 10,
+          "top1_acc": 30.0,
+          "top3_acc": 50.0
+        }
+      }
+    },
+    "hybrid": {
+      "top1_acc": 75.0,
+      "top3_acc": 91.7,
+      "breakdown_by_type": {
+        "natural_language": {
+          "total": 50,
+          "top1_acc": 68.0,
+          "top3_acc": 88.0
+        },
+        "abbreviation": {
+          "total": 12,
+          "top1_acc": 100.0,
+          "top3_acc": 100.0
+        },
+        "fuzzy_typo": {
+          "total": 10,
+          "top1_acc": 80.0,
+          "top3_acc": 100.0
+        }
+      }
+    }
+  },
+  "latency": {
+    "rule": {
+      "mean_ms": 0.041,
+      "p50_ms": 0.04,
+      "p90_ms": 0.045,
+      "p95_ms": 0.053,
+      "p99_ms": 0.117,
+      "min_ms": 0.001,
+      "max_ms": 0.355
+    },
+    "fuzzy": {
+      "mean_ms": 0.849,
+      "p50_ms": 0.751,
+      "p90_ms": 1.184,
+      "p95_ms": 1.276,
+      "p99_ms": 1.502,
+      "min_ms": 0.001,
+      "max_ms": 4.077
+    },
+    "model": {
+      "mean_ms": 0.076,
+      "p50_ms": 0.073,
+      "p90_ms": 0.085,
+      "p95_ms": 0.096,
+      "p99_ms": 0.211,
+      "min_ms": 0.001,
+      "max_ms": 0.376
+    },
+    "hybrid": {
+      "mean_ms": 1.115,
+      "p50_ms": 1.027,
+      "p90_ms": 1.494,
+      "p95_ms": 1.609,
+      "p99_ms": 2.127,
+      "min_ms": 0.001,
+      "max_ms": 2.775
+    }
+  },
+  "special_cases": {
+    "abbreviation": [
+      {
+        "query": "kill",
+        "expected": "proc_kill_name",
+        "is_empty": false,
+        "is_out_of_domain": false,
+        "top_candidate": {
+          "command": "Stop-Process -Name \"<name>\" -Force",
+          "intent_id": "proc_kill_name",
+          "description": "Forcibly terminate running processes matching the specified process name.",
+          "score": 1.0,
+          "source": "rule_exact",
+          "risk_level": "dangerous",
+          "risk_reason": "Forcibly terminates running processes without saving unsaved data or giving cleanup time.",
+          "category": "process"
+        }
+      },
+      {
+        "query": "ps",
+        "expected": "proc_list",
+        "is_empty": false,
+        "is_out_of_domain": false,
+        "top_candidate": {
+          "command": "Get-Process | Sort-Object CPU -Descending | Select-Object -First 10",
+          "intent_id": "proc_list",
+          "description": "List top running processes sorted by CPU utilization.",
+          "score": 1.0,
+          "source": "rule_exact",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "process"
+        }
+      },
+      {
+        "query": "ls -la",
+        "expected": "file_list_all",
+        "is_empty": false,
+        "is_out_of_domain": false,
+        "top_candidate": {
+          "command": "Get-ChildItem -Force",
+          "intent_id": "file_list_all",
+          "description": "List all files including hidden and system files.",
+          "score": 1.0,
+          "source": "rule_exact",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "filesystem"
+        }
+      },
+      {
+        "query": "rm -rf",
+        "expected": "file_delete_recursive",
+        "is_empty": false,
+        "is_out_of_domain": false,
+        "top_candidate": {
+          "command": "Remove-Item -Path \"<folder>\" -Recurse -Force",
+          "intent_id": "file_delete_recursive",
+          "description": "Forcibly and recursively delete an entire directory and all its contents.",
+          "score": 1.0,
+          "source": "rule_exact",
+          "risk_level": "dangerous",
+          "risk_reason": "Destructive operation! Irrevocably purges the entire directory tree without recovery.",
+          "category": "filesystem"
+        }
+      },
+      {
+        "query": "pwd",
+        "expected": "file_print_working_dir",
+        "is_empty": false,
+        "is_out_of_domain": false,
+        "top_candidate": {
+          "command": "(Get-Location).Path",
+          "intent_id": "file_print_working_dir",
+          "description": "Print the current working directory full path.",
+          "score": 1.0,
+          "source": "rule_exact",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "filesystem"
+        }
+      },
+      {
+        "query": "curl",
+        "expected": "net_http_get_json",
+        "is_empty": false,
+        "is_out_of_domain": false,
+        "top_candidate": {
+          "command": "Invoke-RestMethod -Uri \"<url>\" -Method Get",
+          "intent_id": "net_http_get_json",
+          "description": "Send an HTTP GET request to an API endpoint and parse JSON response.",
+          "score": 1.0,
+          "source": "rule_exact",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "network"
+        }
+      },
+      {
+        "query": "ipconfig",
+        "expected": "net_ip_config",
+        "is_empty": false,
+        "is_out_of_domain": false,
+        "top_candidate": {
+          "command": "Get-NetIPAddress -AddressFamily IPv4 | Where-Object IPAddress -ne '127.0.0.1'",
+          "intent_id": "net_ip_config",
+          "description": "Display local machine network interface IPv4 addresses.",
+          "score": 1.0,
+          "source": "rule_exact",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "network"
+        }
+      },
+      {
+        "query": "df -h",
+        "expected": "sys_disk_usage",
+        "is_empty": false,
+        "is_out_of_domain": false,
+        "top_candidate": {
+          "command": "Get-PSDrive -PSProvider FileSystem | Select-Object Root, Used, Free",
+          "intent_id": "sys_disk_usage",
+          "description": "Check available free space and used space across mounted file system drives.",
+          "score": 1.0,
+          "source": "rule_exact",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "system"
+        }
+      },
+      {
+        "query": "cls",
+        "expected": "sys_clear_screen",
+        "is_empty": false,
+        "is_out_of_domain": false,
+        "top_candidate": {
+          "command": "Clear-Host",
+          "intent_id": "sys_clear_screen",
+          "description": "Clear the terminal console screen buffer.",
+          "score": 1.0,
+          "source": "rule_exact",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "system"
+        }
+      },
+      {
+        "query": "grep",
+        "expected": "file_search_text",
+        "is_empty": false,
+        "is_out_of_domain": false,
+        "top_candidate": {
+          "command": "Select-String -Path \"*.log\" -Pattern \"<pattern>\"",
+          "intent_id": "file_search_text",
+          "description": "Search text files for lines matching a string or regular expression pattern.",
+          "score": 1.0,
+          "source": "rule_exact",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "filesystem"
+        }
+      },
+      {
+        "query": "uptime",
+        "expected": "sys_uptime",
+        "is_empty": false,
+        "is_out_of_domain": false,
+        "top_candidate": {
+          "command": "(Get-Uptime).TotalHours",
+          "intent_id": "sys_uptime",
+          "description": "Display how long the Windows system has been running since last boot.",
+          "score": 1.0,
+          "source": "rule_exact",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "system"
+        }
+      },
+      {
+        "query": "mkdir",
+        "expected": "file_new_directory",
+        "is_empty": false,
+        "is_out_of_domain": false,
+        "top_candidate": {
+          "command": "New-Item -ItemType Directory -Path \"<folder>\"",
+          "intent_id": "file_new_directory",
+          "description": "Create a new folder or directory path.",
+          "score": 1.0,
+          "source": "rule_exact",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "filesystem"
+        }
+      }
+    ],
+    "out_of_domain": [
+      {
+        "query": "how to bake chocolate chip cookies",
+        "expected": null,
+        "is_empty": false,
+        "is_out_of_domain": true,
+        "top_candidate": {
+          "command": "Resolve-DnsName -Name \"<domain>\"",
+          "intent_id": "net_dns_resolve",
+          "description": "Query DNS records (A, AAAA, CNAME) for a given domain name.",
+          "score": 0.3589,
+          "source": "fuzzy",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "network"
+        }
+      },
+      {
+        "query": "play lo-fi jazz music playlist",
+        "expected": null,
+        "is_empty": false,
+        "is_out_of_domain": true,
+        "top_candidate": {
+          "command": "Get-ChildItem -Force",
+          "intent_id": "file_list_all",
+          "description": "List all files including hidden and system files.",
+          "score": 0.3586,
+          "source": "fuzzy",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "filesystem"
+        }
+      },
+      {
+        "query": "what is the capital of switzerland",
+        "expected": null,
+        "is_empty": false,
+        "is_out_of_domain": true,
+        "top_candidate": {
+          "command": "Select-String -Path \"*.log\" -Pattern \"<pattern>\"",
+          "intent_id": "file_search_text",
+          "description": "Search text files for lines matching a string or regular expression pattern.",
+          "score": 0.2944,
+          "source": "fuzzy",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "filesystem"
+        }
+      },
+      {
+        "query": "order pepperoni pizza online",
+        "expected": null,
+        "is_empty": false,
+        "is_out_of_domain": true,
+        "top_candidate": {
+          "command": "Expand-Archive -Path \"<archive.zip>\" -DestinationPath \"<destination>\" -Force",
+          "intent_id": "arch_unzip_file",
+          "description": "Extract and decompress files from a zip archive into a destination directory.",
+          "score": 0.3926,
+          "source": "fuzzy",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "archive"
+        }
+      },
+      {
+        "query": "write a haiku about autumn leaves",
+        "expected": null,
+        "is_empty": false,
+        "is_out_of_domain": true,
+        "top_candidate": {
+          "command": "New-Item -ItemType File -Path \"<filename>\"",
+          "intent_id": "file_new_empty_file",
+          "description": "Create a new blank file at the specified path.",
+          "score": 0.4049,
+          "source": "model",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "filesystem"
+        }
+      },
+      {
+        "query": "convert miles per hour to kilometers",
+        "expected": null,
+        "is_empty": false,
+        "is_out_of_domain": true,
+        "top_candidate": {
+          "command": "Move-Item -Path \"<source>\" -Destination \"<dest>\" -Force",
+          "intent_id": "file_move",
+          "description": "Move or rename a file or folder to a new location.",
+          "score": 0.4069,
+          "source": "fuzzy",
+          "risk_level": "warning",
+          "risk_reason": "Overwrites existing files at destination if forced, and changes file paths.",
+          "category": "filesystem"
+        }
+      }
+    ],
+    "edge_case": [
+      {
+        "query": "",
+        "expected": null,
+        "is_empty": true,
+        "is_out_of_domain": false,
+        "top_candidate": null
+      },
+      {
+        "query": "   ",
+        "expected": null,
+        "is_empty": true,
+        "is_out_of_domain": false,
+        "top_candidate": null
+      },
+      {
+        "query": "???",
+        "expected": null,
+        "is_empty": false,
+        "is_out_of_domain": true,
+        "top_candidate": null
+      },
+      {
+        "query": "!@#$%^&*",
+        "expected": null,
+        "is_empty": false,
+        "is_out_of_domain": true,
+        "top_candidate": null
+      }
+    ]
+  },
+  "failures_hybrid": [
+    {
+      "query": "kill process 12480 immediately",
+      "type": "natural_language",
+      "expected": "proc_kill_id",
+      "got_top1": "proc_kill_name",
+      "candidates": [
+        {
+          "command": "Stop-Process -Name \"<name>\" -Force",
+          "intent_id": "proc_kill_name",
+          "description": "Forcibly terminate running processes matching the specified process name.",
+          "score": 1.0,
+          "source": "rule_exact",
+          "risk_level": "dangerous",
+          "risk_reason": "Forcibly terminates running processes without saving unsaved data or giving cleanup time.",
+          "category": "process"
+        },
+        {
+          "command": "Stop-Process -Id <pid> -Force",
+          "intent_id": "proc_kill_id",
+          "description": "Forcibly terminate a running process by its numeric Process ID (PID).",
+          "score": 0.5079,
+          "source": "fuzzy",
+          "risk_level": "dangerous",
+          "risk_reason": "Forcibly kills a process identified by PID; wrong PID can crash critical system services.",
+          "category": "process"
+        },
+        {
+          "command": "Stop-Computer -Force",
+          "intent_id": "sys_shutdown_machine",
+          "description": "Immediately and forcibly power off and shut down the computer.",
+          "score": 0.4881,
+          "source": "fuzzy",
+          "risk_level": "dangerous",
+          "risk_reason": "Powers down the machine immediately; unsaved user sessions and files are lost.",
+          "category": "system"
+        }
+      ],
+      "in_top3": true
+    },
+    {
+      "query": "is my docker daemon running",
+      "type": "natural_language",
+      "expected": "proc_find",
+      "got_top1": "sys_service_start",
+      "candidates": [
+        {
+          "command": "Start-Service -Name \"<service>\"",
+          "intent_id": "sys_service_start",
+          "description": "Start an existing stopped Windows service.",
+          "score": 0.6002,
+          "source": "model",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "system"
+        },
+        {
+          "command": "Restart-Service -Name \"<service>\" -Force",
+          "intent_id": "sys_service_restart",
+          "description": "Restart a Windows system service forcibly.",
+          "score": 0.5931,
+          "source": "model",
+          "risk_level": "warning",
+          "risk_reason": "Temporarily interrupts service availability and dependent processes.",
+          "category": "system"
+        },
+        {
+          "command": "Get-Service | Where-Object Status -eq 'Running'",
+          "intent_id": "sys_service_list",
+          "description": "List all active and running Windows services.",
+          "score": 0.4127,
+          "source": "model",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "system"
+        }
+      ],
+      "in_top3": false
+    },
+    {
+      "query": "search everywhere for all markdown notes",
+      "type": "natural_language",
+      "expected": "file_find_recurse",
+      "got_top1": "proc_find",
+      "candidates": [
+        {
+          "command": "Get-Process -Name \"<name>\"",
+          "intent_id": "proc_find",
+          "description": "Find and inspect process status and memory usage for a specific process name.",
+          "score": 0.3906,
+          "source": "fuzzy",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "process"
+        },
+        {
+          "command": "Get-ComputerInfo | Select-Object WindowsProductName, OsHardwareAbstractionLayer, TotalPhysicalMemory",
+          "intent_id": "sys_system_info",
+          "description": "Retrieve comprehensive OS, hardware, and physical memory specifications.",
+          "score": 0.3627,
+          "source": "fuzzy",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "system"
+        },
+        {
+          "command": "Stop-Computer -Force",
+          "intent_id": "sys_shutdown_machine",
+          "description": "Immediately and forcibly power off and shut down the computer.",
+          "score": 0.3514,
+          "source": "fuzzy",
+          "risk_level": "dangerous",
+          "risk_reason": "Powers down the machine immediately; unsaved user sessions and files are lost.",
+          "category": "system"
+        }
+      ],
+      "in_top3": false
+    },
+    {
+      "query": "trash temporary file data.tmp",
+      "type": "natural_language",
+      "expected": "file_delete_single",
+      "got_top1": "file_new_empty_file",
+      "candidates": [
+        {
+          "command": "New-Item -ItemType File -Path \"<filename>\"",
+          "intent_id": "file_new_empty_file",
+          "description": "Create a new blank file at the specified path.",
+          "score": 0.5191,
+          "source": "model",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "filesystem"
+        },
+        {
+          "command": "Clear-RecycleBin -Force",
+          "intent_id": "sys_clear_recycle_bin",
+          "description": "Permanently empty and delete all files in the Windows Recycle Bin across all drives.",
+          "score": 0.4959,
+          "source": "model",
+          "risk_level": "dangerous",
+          "risk_reason": "Permanently purges all items from the Recycle Bin; cannot be restored.",
+          "category": "system"
+        },
+        {
+          "command": "Move-Item -Path \"<source>\" -Destination \"<dest>\" -Force",
+          "intent_id": "file_move",
+          "description": "Move or rename a file or folder to a new location.",
+          "score": 0.4176,
+          "source": "model",
+          "risk_level": "warning",
+          "risk_reason": "Overwrites existing files at destination if forced, and changes file paths.",
+          "category": "filesystem"
+        }
+      ],
+      "in_top3": false
+    },
+    {
+      "query": "clone directory tree over to d drive",
+      "type": "natural_language",
+      "expected": "file_copy",
+      "got_top1": "file_delete_recursive",
+      "candidates": [
+        {
+          "command": "Remove-Item -Path \"<folder>\" -Recurse -Force",
+          "intent_id": "file_delete_recursive",
+          "description": "Forcibly and recursively delete an entire directory and all its contents.",
+          "score": 0.5338,
+          "source": "fuzzy",
+          "risk_level": "dangerous",
+          "risk_reason": "Destructive operation! Irrevocably purges the entire directory tree without recovery.",
+          "category": "filesystem"
+        },
+        {
+          "command": "Move-Item -Path \"<source>\" -Destination \"<dest>\" -Force",
+          "intent_id": "file_move",
+          "description": "Move or rename a file or folder to a new location.",
+          "score": 0.5225,
+          "source": "fuzzy",
+          "risk_level": "warning",
+          "risk_reason": "Overwrites existing files at destination if forced, and changes file paths.",
+          "category": "filesystem"
+        },
+        {
+          "command": "Copy-Item -Path \"<source>\" -Destination \"<dest>\" -Recurse",
+          "intent_id": "file_copy",
+          "description": "Copy files or directory structures to a target destination.",
+          "score": 0.4951,
+          "source": "model",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "filesystem"
+        }
+      ],
+      "in_top3": true
+    },
+    {
+      "query": "what is my current path right now",
+      "type": "natural_language",
+      "expected": "file_print_working_dir",
+      "got_top1": "file_test_exists",
+      "candidates": [
+        {
+          "command": "Test-Path -Path \"<path>\"",
+          "intent_id": "file_test_exists",
+          "description": "Test whether a file or folder path exists on disk, returning True or False.",
+          "score": 0.5326,
+          "source": "model",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "filesystem"
+        },
+        {
+          "command": "(Get-Location).Path",
+          "intent_id": "file_print_working_dir",
+          "description": "Print the current working directory full path.",
+          "score": 0.5324,
+          "source": "model",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "filesystem"
+        },
+        {
+          "command": "Wait-Process -Name \"<name>\"",
+          "intent_id": "proc_wait",
+          "description": "Pause shell execution until the specified process has stopped.",
+          "score": 0.4453,
+          "source": "model",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "process"
+        }
+      ],
+      "in_top3": true
+    },
+    {
+      "query": "test if gateway 192.168.1.1 answers icmp packets",
+      "type": "natural_language",
+      "expected": "net_ping_host",
+      "got_top1": "net_ip_config",
+      "candidates": [
+        {
+          "command": "Get-NetIPAddress -AddressFamily IPv4 | Where-Object IPAddress -ne '127.0.0.1'",
+          "intent_id": "net_ip_config",
+          "description": "Display local machine network interface IPv4 addresses.",
+          "score": 0.4428,
+          "source": "model",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "network"
+        },
+        {
+          "command": "Test-NetConnection -ComputerName <host> -Port <port>",
+          "intent_id": "net_test_port",
+          "description": "Test TCP network connectivity to a specific host and port number.",
+          "score": 0.4331,
+          "source": "model",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "network"
+        },
+        {
+          "command": "Get-NetTCPConnection -State Listen | Select-Object LocalAddress, LocalPort, OwningProcess",
+          "intent_id": "net_listening_ports",
+          "description": "List all active TCP listening ports and their owning process IDs.",
+          "score": 0.3902,
+          "source": "model",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "network"
+        }
+      ],
+      "in_top3": false
+    },
+    {
+      "query": "grab an image from https url and store it locally",
+      "type": "natural_language",
+      "expected": "net_download_file",
+      "got_top1": "net_http_get_json",
+      "candidates": [
+        {
+          "command": "Invoke-RestMethod -Uri \"<url>\" -Method Get",
+          "intent_id": "net_http_get_json",
+          "description": "Send an HTTP GET request to an API endpoint and parse JSON response.",
+          "score": 0.4502,
+          "source": "model",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "network"
+        },
+        {
+          "command": "Get-PSDrive -PSProvider FileSystem | Select-Object Root, Used, Free",
+          "intent_id": "sys_disk_usage",
+          "description": "Check available free space and used space across mounted file system drives.",
+          "score": 0.4129,
+          "source": "model",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "system"
+        },
+        {
+          "command": "Invoke-WebRequest -Uri \"<url>\" -OutFile \"<destination>\"",
+          "intent_id": "net_download_file",
+          "description": "Download a file from a URL and save it to a local disk path.",
+          "score": 0.4116,
+          "source": "model",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "network"
+        }
+      ],
+      "in_top3": true
+    },
+    {
+      "query": "find my wifi adapter ipv4 address",
+      "type": "natural_language",
+      "expected": "net_ip_config",
+      "got_top1": "file_find_recurse",
+      "candidates": [
+        {
+          "command": "Get-ChildItem -Recurse -Filter \"*.<ext>\"",
+          "intent_id": "file_find_recurse",
+          "description": "Recursively find files matching a wildcard pattern or extension in subfolders.",
+          "score": 0.63,
+          "source": "fuzzy",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "filesystem"
+        },
+        {
+          "command": "Get-NetIPAddress -AddressFamily IPv4 | Where-Object IPAddress -ne '127.0.0.1'",
+          "intent_id": "net_ip_config",
+          "description": "Display local machine network interface IPv4 addresses.",
+          "score": 0.5926,
+          "source": "model",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "network"
+        },
+        {
+          "command": "Resolve-DnsName -Name \"<domain>\"",
+          "intent_id": "net_dns_resolve",
+          "description": "Query DNS records (A, AAAA, CNAME) for a given domain name.",
+          "score": 0.452,
+          "source": "model",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "network"
+        }
+      ],
+      "in_top3": true
+    },
+    {
+      "query": "look up ip address for api.example.com",
+      "type": "natural_language",
+      "expected": "net_dns_resolve",
+      "got_top1": "net_ip_config",
+      "candidates": [
+        {
+          "command": "Get-NetIPAddress -AddressFamily IPv4 | Where-Object IPAddress -ne '127.0.0.1'",
+          "intent_id": "net_ip_config",
+          "description": "Display local machine network interface IPv4 addresses.",
+          "score": 0.5586,
+          "source": "model",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "network"
+        },
+        {
+          "command": "Resolve-DnsName -Name \"<domain>\"",
+          "intent_id": "net_dns_resolve",
+          "description": "Query DNS records (A, AAAA, CNAME) for a given domain name.",
+          "score": 0.4752,
+          "source": "model",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "network"
+        },
+        {
+          "command": "Invoke-RestMethod -Uri \"<url>\" -Method Get",
+          "intent_id": "net_http_get_json",
+          "description": "Send an HTTP GET request to an API endpoint and parse JSON response.",
+          "score": 0.2532,
+          "source": "model",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "network"
+        }
+      ],
+      "in_top3": true
+    },
+    {
+      "query": "clear windows dns cache entries after changing nameservers",
+      "type": "natural_language",
+      "expected": "net_flush_dns",
+      "got_top1": "sys_clear_screen",
+      "candidates": [
+        {
+          "command": "Clear-Host",
+          "intent_id": "sys_clear_screen",
+          "description": "Clear the terminal console screen buffer.",
+          "score": 0.7135,
+          "source": "fuzzy",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "system"
+        },
+        {
+          "command": "Clear-DnsClientCache",
+          "intent_id": "net_flush_dns",
+          "description": "Clear and flush the local Windows DNS client resolver cache.",
+          "score": 0.5808,
+          "source": "model",
+          "risk_level": "warning",
+          "risk_reason": "Clears all cached name resolutions; may temporarily increase DNS lookup latencies.",
+          "category": "network"
+        },
+        {
+          "command": "Get-Service | Where-Object Status -eq 'Running'",
+          "intent_id": "sys_service_list",
+          "description": "List all active and running Windows services.",
+          "score": 0.4449,
+          "source": "model",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "system"
+        }
+      ],
+      "in_top3": true
+    },
+    {
+      "query": "stop windows update service immediately",
+      "type": "natural_language",
+      "expected": "sys_service_stop",
+      "got_top1": "sys_service_start",
+      "candidates": [
+        {
+          "command": "Start-Service -Name \"<service>\"",
+          "intent_id": "sys_service_start",
+          "description": "Start an existing stopped Windows service.",
+          "score": 0.6566,
+          "source": "model",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "system"
+        },
+        {
+          "command": "Stop-Service -Name \"<service>\" -Force",
+          "intent_id": "sys_service_stop",
+          "description": "Stop a running Windows system service.",
+          "score": 0.6496,
+          "source": "model",
+          "risk_level": "warning",
+          "risk_reason": "Disables active system service functionality and dependent applications.",
+          "category": "system"
+        },
+        {
+          "command": "Restart-Service -Name \"<service>\" -Force",
+          "intent_id": "sys_service_restart",
+          "description": "Restart a Windows system service forcibly.",
+          "score": 0.6095,
+          "source": "model",
+          "risk_level": "warning",
+          "risk_reason": "Temporarily interrupts service availability and dependent processes.",
+          "category": "system"
+        }
+      ],
+      "in_top3": true
+    },
+    {
+      "query": "start the stopped sshd daemon",
+      "type": "natural_language",
+      "expected": "sys_service_start",
+      "got_top1": "proc_start",
+      "candidates": [
+        {
+          "command": "Start-Process \"<program>\" -ArgumentList \"<args>\"",
+          "intent_id": "proc_start",
+          "description": "Start or launch an executable program with optional command-line arguments.",
+          "score": 0.63,
+          "source": "fuzzy",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "process"
+        },
+        {
+          "command": "Start-Service -Name \"<service>\"",
+          "intent_id": "sys_service_start",
+          "description": "Start an existing stopped Windows service.",
+          "score": 0.5492,
+          "source": "model",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "system"
+        },
+        {
+          "command": "Restart-Service -Name \"<service>\" -Force",
+          "intent_id": "sys_service_restart",
+          "description": "Restart a Windows system service forcibly.",
+          "score": 0.4854,
+          "source": "model",
+          "risk_level": "warning",
+          "risk_reason": "Temporarily interrupts service availability and dependent processes.",
+          "category": "system"
+        }
+      ],
+      "in_top3": true
+    },
+    {
+      "query": "how long has this computer been turned on without restarting",
+      "type": "natural_language",
+      "expected": "sys_uptime",
+      "got_top1": "sys_reboot_machine",
+      "candidates": [
+        {
+          "command": "Restart-Computer -Force",
+          "intent_id": "sys_reboot_machine",
+          "description": "Immediately and forcibly reboot the Windows operating system.",
+          "score": 0.6126,
+          "source": "model",
+          "risk_level": "dangerous",
+          "risk_reason": "Immediately reboots the operating system; closes all open apps and loses unsaved work.",
+          "category": "system"
+        },
+        {
+          "command": "Stop-Computer -Force",
+          "intent_id": "sys_shutdown_machine",
+          "description": "Immediately and forcibly power off and shut down the computer.",
+          "score": 0.5546,
+          "source": "model",
+          "risk_level": "dangerous",
+          "risk_reason": "Powers down the machine immediately; unsaved user sessions and files are lost.",
+          "category": "system"
+        },
+        {
+          "command": "(Get-Uptime).TotalHours",
+          "intent_id": "sys_uptime",
+          "description": "Display how long the Windows system has been running since last boot.",
+          "score": 0.522,
+          "source": "model",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "system"
+        }
+      ],
+      "in_top3": true
+    },
+    {
+      "query": "check what USERPROFILE is set to",
+      "type": "natural_language",
+      "expected": "env_get_value",
+      "got_top1": "net_ip_config",
+      "candidates": [
+        {
+          "command": "Get-NetIPAddress -AddressFamily IPv4 | Where-Object IPAddress -ne '127.0.0.1'",
+          "intent_id": "net_ip_config",
+          "description": "Display local machine network interface IPv4 addresses.",
+          "score": 0.3961,
+          "source": "model",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "network"
+        },
+        {
+          "command": "Get-ChildItem -Recurse -Filter \"*.<ext>\"",
+          "intent_id": "file_find_recurse",
+          "description": "Recursively find files matching a wildcard pattern or extension in subfolders.",
+          "score": 0.3825,
+          "source": "fuzzy",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "filesystem"
+        },
+        {
+          "command": "Test-Path -Path \"<path>\"",
+          "intent_id": "file_test_exists",
+          "description": "Test whether a file or folder path exists on disk, returning True or False.",
+          "score": 0.3724,
+          "source": "fuzzy",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "filesystem"
+        }
+      ],
+      "in_top3": false
+    },
+    {
+      "query": "set NODE_ENV to production in this console",
+      "type": "natural_language",
+      "expected": "env_set_temp",
+      "got_top1": "env_list_all",
+      "candidates": [
+        {
+          "command": "Get-ChildItem Env:",
+          "intent_id": "env_list_all",
+          "description": "List all active shell environment variables and their values.",
+          "score": 0.6212,
+          "source": "fuzzy",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "environment"
+        },
+        {
+          "command": "$env:<VARIABLE_NAME>",
+          "intent_id": "env_get_value",
+          "description": "Print the current value of a specific environment variable.",
+          "score": 0.3855,
+          "source": "model",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "environment"
+        },
+        {
+          "command": "Stop-Process -Name \"<name>\" -Force",
+          "intent_id": "proc_kill_name",
+          "description": "Forcibly terminate running processes matching the specified process name.",
+          "score": 0.3855,
+          "source": "fuzzy",
+          "risk_level": "dangerous",
+          "risk_reason": "Forcibly terminates running processes without saving unsaved data or giving cleanup time.",
+          "category": "process"
+        }
+      ],
+      "in_top3": false
+    },
+    {
+      "query": "stopp-procss chrome",
+      "type": "fuzzy_typo",
+      "expected": "proc_kill_name",
+      "got_top1": "proc_list",
+      "candidates": [
+        {
+          "command": "Get-Process | Sort-Object CPU -Descending | Select-Object -First 10",
+          "intent_id": "proc_list",
+          "description": "List top running processes sorted by CPU utilization.",
+          "score": 0.63,
+          "source": "fuzzy",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "process"
+        },
+        {
+          "command": "Get-Process -Name \"<name>\"",
+          "intent_id": "proc_find",
+          "description": "Find and inspect process status and memory usage for a specific process name.",
+          "score": 0.5931,
+          "source": "fuzzy",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "process"
+        },
+        {
+          "command": "Stop-Process -Name \"<name>\" -Force",
+          "intent_id": "proc_kill_name",
+          "description": "Forcibly terminate running processes matching the specified process name.",
+          "score": 0.5775,
+          "source": "fuzzy",
+          "risk_level": "dangerous",
+          "risk_reason": "Forcibly terminates running processes without saving unsaved data or giving cleanup time.",
+          "category": "process"
+        }
+      ],
+      "in_top3": true
+    },
+    {
+      "query": "expande-archive zip",
+      "type": "fuzzy_typo",
+      "expected": "arch_unzip_file",
+      "got_top1": "arch_zip_folder",
+      "candidates": [
+        {
+          "command": "Compress-Archive -Path \"<source>\" -DestinationPath \"<archive.zip>\" -Force",
+          "intent_id": "arch_zip_folder",
+          "description": "Compress files or folders into a zip archive file.",
+          "score": 0.7952,
+          "source": "fuzzy",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "archive"
+        },
+        {
+          "command": "Expand-Archive -Path \"<archive.zip>\" -DestinationPath \"<destination>\" -Force",
+          "intent_id": "arch_unzip_file",
+          "description": "Extract and decompress files from a zip archive into a destination directory.",
+          "score": 0.7595,
+          "source": "fuzzy",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "archive"
+        },
+        {
+          "command": "Copy-Item -Path \"<source>\" -Destination \"<dest>\" -Recurse",
+          "intent_id": "file_copy",
+          "description": "Copy files or directory structures to a target destination.",
+          "score": 0.4684,
+          "source": "fuzzy",
+          "risk_level": "safe",
+          "risk_reason": null,
+          "category": "filesystem"
+        }
+      ],
+      "in_top3": true
+    }
+  ]
+}

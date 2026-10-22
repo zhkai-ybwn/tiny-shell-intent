@@ -1,0 +1,494 @@
+[
+  {
+    "id": "nl_01",
+    "query": "terminate a stuck python script",
+    "expected_intent_id": "proc_kill_name",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_02",
+    "query": "kill process 12480 immediately",
+    "expected_intent_id": "proc_kill_id",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_03",
+    "query": "which programs are hogging the processor right now",
+    "expected_intent_id": "proc_list",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_04",
+    "query": "is my docker daemon running",
+    "expected_intent_id": "proc_find",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_05",
+    "query": "launch notepad as detached process",
+    "expected_intent_id": "proc_start",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_06",
+    "query": "pause script until installer finishes",
+    "expected_intent_id": "proc_wait",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_07",
+    "query": "display all files in this directory",
+    "expected_intent_id": "file_list",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_08",
+    "query": "reveal dotfiles and hidden documents",
+    "expected_intent_id": "file_list_all",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_09",
+    "query": "search everywhere for all markdown notes",
+    "expected_intent_id": "file_find_recurse",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_10",
+    "query": "inspect the beginning lines of readme",
+    "expected_intent_id": "file_read_head",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_11",
+    "query": "watch live server logs as they append",
+    "expected_intent_id": "file_read_tail",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_12",
+    "query": "find lines with exception or fatal in debug logs",
+    "expected_intent_id": "file_search_text",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_13",
+    "query": "trash temporary file data.tmp",
+    "expected_intent_id": "file_delete_single",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_14",
+    "query": "completely wipe out old build folder and all subfolders",
+    "expected_intent_id": "file_delete_recursive",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_15",
+    "query": "clone directory tree over to d drive",
+    "expected_intent_id": "file_copy",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_16",
+    "query": "rename config.old to config.json",
+    "expected_intent_id": "file_move",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_17",
+    "query": "create a new directory called assets",
+    "expected_intent_id": "file_new_directory",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_18",
+    "query": "create a blank index.html file",
+    "expected_intent_id": "file_new_empty_file",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_19",
+    "query": "does target file exist on disk",
+    "expected_intent_id": "file_test_exists",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_20",
+    "query": "how many lines are inside this csv file",
+    "expected_intent_id": "file_count_lines",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_21",
+    "query": "verify sha256 fingerprint of downloaded installer",
+    "expected_intent_id": "file_checksum_sha256",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_22",
+    "query": "what is my current path right now",
+    "expected_intent_id": "file_print_working_dir",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_23",
+    "query": "is postgresql port 5432 accessible on the database server",
+    "expected_intent_id": "net_test_port",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_24",
+    "query": "test if gateway 192.168.1.1 answers icmp packets",
+    "expected_intent_id": "net_ping_host",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_25",
+    "query": "see what application is bound to port 8000",
+    "expected_intent_id": "net_listening_ports",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_26",
+    "query": "query github json api for repo metadata",
+    "expected_intent_id": "net_http_get_json",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_27",
+    "query": "grab an image from https url and store it locally",
+    "expected_intent_id": "net_download_file",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_28",
+    "query": "find my wifi adapter ipv4 address",
+    "expected_intent_id": "net_ip_config",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_29",
+    "query": "look up ip address for api.example.com",
+    "expected_intent_id": "net_dns_resolve",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_30",
+    "query": "clear windows dns cache entries after changing nameservers",
+    "expected_intent_id": "net_flush_dns",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_31",
+    "query": "show the route path taken to reach cloudflare",
+    "expected_intent_id": "net_trace_route",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_32",
+    "query": "check status of all installed system services",
+    "expected_intent_id": "sys_service_list",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_33",
+    "query": "restart spooler printing service",
+    "expected_intent_id": "sys_service_restart",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_34",
+    "query": "stop windows update service immediately",
+    "expected_intent_id": "sys_service_stop",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_35",
+    "query": "start the stopped sshd daemon",
+    "expected_intent_id": "sys_service_start",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_36",
+    "query": "how much physical memory and what windows version do i have",
+    "expected_intent_id": "sys_system_info",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_37",
+    "query": "how many gigabytes of free disk space remaining on c",
+    "expected_intent_id": "sys_disk_usage",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_38",
+    "query": "how long has this computer been turned on without restarting",
+    "expected_intent_id": "sys_uptime",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_39",
+    "query": "reboot my workstation right now",
+    "expected_intent_id": "sys_reboot_machine",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_40",
+    "query": "turn off the pc right now",
+    "expected_intent_id": "sys_shutdown_machine",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_41",
+    "query": "permanently wipe items in the trash bin",
+    "expected_intent_id": "sys_clear_recycle_bin",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_42",
+    "query": "print out all exported environment variables",
+    "expected_intent_id": "env_list_all",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_43",
+    "query": "check what USERPROFILE is set to",
+    "expected_intent_id": "env_get_value",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_44",
+    "query": "set NODE_ENV to production in this console",
+    "expected_intent_id": "env_set_temp",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_45",
+    "query": "print path variable separated by newlines",
+    "expected_intent_id": "env_path_inspect",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_46",
+    "query": "allow running unverified powershell scripts on this machine",
+    "expected_intent_id": "env_set_exec_policy",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_47",
+    "query": "pack project files into a release zip",
+    "expected_intent_id": "arch_zip_folder",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_48",
+    "query": "extract contents of downloaded zip archive",
+    "expected_intent_id": "arch_unzip_file",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_49",
+    "query": "clear console scrollback buffer",
+    "expected_intent_id": "sys_clear_screen",
+    "type": "natural_language"
+  },
+  {
+    "id": "nl_50",
+    "query": "what were the last 10 commands i ran",
+    "expected_intent_id": "sys_command_history",
+    "type": "natural_language"
+  },
+  {
+    "id": "abbr_01",
+    "query": "kill",
+    "expected_intent_id": "proc_kill_name",
+    "type": "abbreviation"
+  },
+  {
+    "id": "abbr_02",
+    "query": "ps",
+    "expected_intent_id": "proc_list",
+    "type": "abbreviation"
+  },
+  {
+    "id": "abbr_03",
+    "query": "ls -la",
+    "expected_intent_id": "file_list_all",
+    "type": "abbreviation"
+  },
+  {
+    "id": "abbr_04",
+    "query": "rm -rf",
+    "expected_intent_id": "file_delete_recursive",
+    "type": "abbreviation"
+  },
+  {
+    "id": "abbr_05",
+    "query": "pwd",
+    "expected_intent_id": "file_print_working_dir",
+    "type": "abbreviation"
+  },
+  {
+    "id": "abbr_06",
+    "query": "curl",
+    "expected_intent_id": "net_http_get_json",
+    "type": "abbreviation"
+  },
+  {
+    "id": "abbr_07",
+    "query": "ipconfig",
+    "expected_intent_id": "net_ip_config",
+    "type": "abbreviation"
+  },
+  {
+    "id": "abbr_08",
+    "query": "df -h",
+    "expected_intent_id": "sys_disk_usage",
+    "type": "abbreviation"
+  },
+  {
+    "id": "abbr_09",
+    "query": "cls",
+    "expected_intent_id": "sys_clear_screen",
+    "type": "abbreviation"
+  },
+  {
+    "id": "abbr_10",
+    "query": "grep",
+    "expected_intent_id": "file_search_text",
+    "type": "abbreviation"
+  },
+  {
+    "id": "abbr_11",
+    "query": "uptime",
+    "expected_intent_id": "sys_uptime",
+    "type": "abbreviation"
+  },
+  {
+    "id": "abbr_12",
+    "query": "mkdir",
+    "expected_intent_id": "file_new_directory",
+    "type": "abbreviation"
+  },
+  {
+    "id": "typo_01",
+    "query": "stopp-procss chrome",
+    "expected_intent_id": "proc_kill_name",
+    "type": "fuzzy_typo"
+  },
+  {
+    "id": "typo_02",
+    "query": "tset-netconnection 8080",
+    "expected_intent_id": "net_test_port",
+    "type": "fuzzy_typo"
+  },
+  {
+    "id": "typo_03",
+    "query": "get-childiitem -recrusive",
+    "expected_intent_id": "file_find_recurse",
+    "type": "fuzzy_typo"
+  },
+  {
+    "id": "typo_04",
+    "query": "select-strng errro",
+    "expected_intent_id": "file_search_text",
+    "type": "fuzzy_typo"
+  },
+  {
+    "id": "typo_05",
+    "query": "restarte-servic spooler",
+    "expected_intent_id": "sys_service_restart",
+    "type": "fuzzy_typo"
+  },
+  {
+    "id": "typo_06",
+    "query": "expande-archive zip",
+    "expected_intent_id": "arch_unzip_file",
+    "type": "fuzzy_typo"
+  },
+  {
+    "id": "typo_07",
+    "query": "clrear-dnsclientcache",
+    "expected_intent_id": "net_flush_dns",
+    "type": "fuzzy_typo"
+  },
+  {
+    "id": "typo_08",
+    "query": "get-computrinfo specs",
+    "expected_intent_id": "sys_system_info",
+    "type": "fuzzy_typo"
+  },
+  {
+    "id": "typo_09",
+    "query": "invok-restmethdo url",
+    "expected_intent_id": "net_http_get_json",
+    "type": "fuzzy_typo"
+  },
+  {
+    "id": "typo_10",
+    "query": "cleare-recycleebin",
+    "expected_intent_id": "sys_clear_recycle_bin",
+    "type": "fuzzy_typo"
+  },
+  {
+    "id": "ood_01",
+    "query": "how to bake chocolate chip cookies",
+    "expected_intent_id": null,
+    "type": "out_of_domain"
+  },
+  {
+    "id": "ood_02",
+    "query": "play lo-fi jazz music playlist",
+    "expected_intent_id": null,
+    "type": "out_of_domain"
+  },
+  {
+    "id": "ood_03",
+    "query": "what is the capital of switzerland",
+    "expected_intent_id": null,
+    "type": "out_of_domain"
+  },
+  {
+    "id": "ood_04",
+    "query": "order pepperoni pizza online",
+    "expected_intent_id": null,
+    "type": "out_of_domain"
+  },
+  {
+    "id": "ood_05",
+    "query": "write a haiku about autumn leaves",
+    "expected_intent_id": null,
+    "type": "out_of_domain"
+  },
+  {
+    "id": "ood_06",
+    "query": "convert miles per hour to kilometers",
+    "expected_intent_id": null,
+    "type": "out_of_domain"
+  },
+  {
+    "id": "edge_01",
+    "query": "",
+    "expected_intent_id": null,
+    "type": "edge_case"
+  },
+  {
+    "id": "edge_02",
+    "query": "   ",
+    "expected_intent_id": null,
+    "type": "edge_case"
+  },
+  {
+    "id": "edge_03",
+    "query": "???",
+    "expected_intent_id": null,
+    "type": "edge_case"
+  },
+  {
+    "id": "edge_04",
+    "query": "!@#$%^&*",
+    "expected_intent_id": null,
+    "type": "edge_case"
+  }
+]

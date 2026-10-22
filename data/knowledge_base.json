@@ -1,0 +1,802 @@
+[
+  {
+    "id": "proc_kill_name",
+    "category": "process",
+    "command": "Stop-Process -Name \"<name>\" -Force",
+    "aliases": ["kill", "pkill", "taskkill", "kill -9", "stop-process"],
+    "description": "Forcibly terminate running processes matching the specified process name.",
+    "keywords": ["kill", "terminate", "process", "stop", "force", "taskkill", "abort"],
+    "intent_phrases": [
+      "kill process by name",
+      "terminate running program",
+      "stop process named node",
+      "force quit an application",
+      "end unresponsive process"
+    ],
+    "risk_level": "dangerous",
+    "risk_reason": "Forcibly terminates running processes without saving unsaved data or giving cleanup time."
+  },
+  {
+    "id": "proc_kill_id",
+    "category": "process",
+    "command": "Stop-Process -Id <pid> -Force",
+    "aliases": ["kill <pid>", "taskkill /pid", "stop-process -id"],
+    "description": "Forcibly terminate a running process by its numeric Process ID (PID).",
+    "keywords": ["kill", "pid", "process id", "terminate", "stop", "force"],
+    "intent_phrases": [
+      "kill process by pid",
+      "stop task with id",
+      "terminate process number",
+      "end process by id"
+    ],
+    "risk_level": "dangerous",
+    "risk_reason": "Forcibly kills a process identified by PID; wrong PID can crash critical system services."
+  },
+  {
+    "id": "proc_list",
+    "category": "process",
+    "command": "Get-Process | Sort-Object CPU -Descending | Select-Object -First 10",
+    "aliases": ["ps", "top", "tasklist", "get-process"],
+    "description": "List top running processes sorted by CPU utilization.",
+    "keywords": ["processes", "cpu", "running", "top", "list", "tasklist", "monitor"],
+    "intent_phrases": [
+      "list running processes",
+      "show top cpu consuming processes",
+      "view active tasks",
+      "see which process uses high cpu"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "proc_find",
+    "category": "process",
+    "command": "Get-Process -Name \"<name>\"",
+    "aliases": ["pgrep", "find process", "ps | grep"],
+    "description": "Find and inspect process status and memory usage for a specific process name.",
+    "keywords": ["find", "process", "search", "check", "status", "running"],
+    "intent_phrases": [
+      "check if process is running",
+      "find process by name",
+      "see if chrome is open",
+      "search for process status"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "proc_start",
+    "category": "process",
+    "command": "Start-Process \"<program>\" -ArgumentList \"<args>\"",
+    "aliases": ["start", "run", "launch", "exec"],
+    "description": "Start or launch an executable program with optional command-line arguments.",
+    "keywords": ["start", "launch", "run", "open", "execute", "program", "app"],
+    "intent_phrases": [
+      "start a program in background",
+      "launch executable with arguments",
+      "run application from command line",
+      "open new app instance"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "proc_wait",
+    "category": "process",
+    "command": "Wait-Process -Name \"<name>\"",
+    "aliases": ["wait-process", "wait for process"],
+    "description": "Pause shell execution until the specified process has stopped.",
+    "keywords": ["wait", "block", "pause", "process", "exit", "finish"],
+    "intent_phrases": [
+      "wait for process to finish",
+      "block until program terminates",
+      "wait for task completion"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "file_list",
+    "category": "filesystem",
+    "command": "Get-ChildItem -Path .",
+    "aliases": ["ls", "dir", "gci", "list files"],
+    "description": "List files and directories in the current folder.",
+    "keywords": ["list", "files", "directory", "dir", "ls", "contents", "folder"],
+    "intent_phrases": [
+      "list files in current directory",
+      "show directory contents",
+      "see files in folder",
+      "view folder items"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "file_list_all",
+    "category": "filesystem",
+    "command": "Get-ChildItem -Force",
+    "aliases": ["ls -a", "ls -la", "dir /a", "gci -force"],
+    "description": "List all files including hidden and system files.",
+    "keywords": ["hidden", "files", "all", "system", "force", "dotfiles"],
+    "intent_phrases": [
+      "show hidden files",
+      "list all files including dotfiles",
+      "view hidden items in directory",
+      "display secret or system files"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "file_find_recurse",
+    "category": "filesystem",
+    "command": "Get-ChildItem -Recurse -Filter \"*.<ext>\"",
+    "aliases": ["find", "dir /s", "ls -r", "find-file"],
+    "description": "Recursively find files matching a wildcard pattern or extension in subfolders.",
+    "keywords": ["find", "search", "recursive", "subfolder", "filter", "extension", "locate"],
+    "intent_phrases": [
+      "find files recursively by extension",
+      "search for files in subdirectories",
+      "locate all python files in project",
+      "find files matching pattern"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "file_read_head",
+    "category": "filesystem",
+    "command": "Get-Content -Path \"<file>\" -TotalCount 20",
+    "aliases": ["head", "gc -totalcount", "read first lines"],
+    "description": "Display the first few lines of a text file.",
+    "keywords": ["head", "first", "lines", "preview", "beginning", "read", "view"],
+    "intent_phrases": [
+      "show first 20 lines of file",
+      "read head of log file",
+      "preview top lines of document",
+      "view start of text file"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "file_read_tail",
+    "category": "filesystem",
+    "command": "Get-Content -Path \"<file>\" -Tail 50 -Wait",
+    "aliases": ["tail", "tail -f", "gc -tail -wait", "follow log"],
+    "description": "Monitor and follow real-time additions to the end of a log file.",
+    "keywords": ["tail", "follow", "log", "live", "monitor", "watch", "stream"],
+    "intent_phrases": [
+      "stream log file in real time",
+      "tail log file with wait",
+      "follow output of growing file",
+      "monitor latest log lines"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "file_search_text",
+    "category": "filesystem",
+    "command": "Select-String -Path \"*.log\" -Pattern \"<pattern>\"",
+    "aliases": ["grep", "findstr", "sls", "search text"],
+    "description": "Search text files for lines matching a string or regular expression pattern.",
+    "keywords": ["grep", "search", "pattern", "text", "regex", "findstr", "match", "string"],
+    "intent_phrases": [
+      "grep text pattern in files",
+      "search for error string in logs",
+      "find string inside documents",
+      "search log files for keyword"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "file_delete_single",
+    "category": "filesystem",
+    "command": "Remove-Item -Path \"<path>\" -Force",
+    "aliases": ["rm", "del", "erase", "remove-item"],
+    "description": "Delete a single specified file or empty folder.",
+    "keywords": ["delete", "remove", "erase", "rm", "del", "file"],
+    "intent_phrases": [
+      "delete a file",
+      "remove specific file",
+      "erase single file from disk",
+      "clean up one file"
+    ],
+    "risk_level": "warning",
+    "risk_reason": "Permanently deletes the specified file bypassing the Recycle Bin."
+  },
+  {
+    "id": "file_delete_recursive",
+    "category": "filesystem",
+    "command": "Remove-Item -Path \"<folder>\" -Recurse -Force",
+    "aliases": ["rm -rf", "rmdir /s /q", "del /s", "remove folder recurse"],
+    "description": "Forcibly and recursively delete an entire directory and all its contents.",
+    "keywords": ["delete", "remove", "recursive", "rmdir", "rm -rf", "purge", "destroy"],
+    "intent_phrases": [
+      "recursively delete folder and files",
+      "force delete directory tree",
+      "remove node_modules folder completely",
+      "wipe folder contents recursively"
+    ],
+    "risk_level": "dangerous",
+    "risk_reason": "Destructive operation! Irrevocably purges the entire directory tree without recovery."
+  },
+  {
+    "id": "file_copy",
+    "category": "filesystem",
+    "command": "Copy-Item -Path \"<source>\" -Destination \"<dest>\" -Recurse",
+    "aliases": ["cp", "copy", "xcopy", "robocopy", "cpi"],
+    "description": "Copy files or directory structures to a target destination.",
+    "keywords": ["copy", "duplicate", "clone", "backup", "transfer", "cp"],
+    "intent_phrases": [
+      "copy file to destination folder",
+      "duplicate directory recursively",
+      "backup files to another folder",
+      "recursively copy item"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "file_move",
+    "category": "filesystem",
+    "command": "Move-Item -Path \"<source>\" -Destination \"<dest>\" -Force",
+    "aliases": ["mv", "move", "rename", "mi"],
+    "description": "Move or rename a file or folder to a new location.",
+    "keywords": ["move", "rename", "relocate", "transfer", "mv"],
+    "intent_phrases": [
+      "move file to new directory",
+      "rename file or folder",
+      "relocate directory",
+      "shift file to destination"
+    ],
+    "risk_level": "warning",
+    "risk_reason": "Overwrites existing files at destination if forced, and changes file paths."
+  },
+  {
+    "id": "file_new_directory",
+    "category": "filesystem",
+    "command": "New-Item -ItemType Directory -Path \"<folder>\"",
+    "aliases": ["mkdir", "md", "new-item -type directory"],
+    "description": "Create a new folder or directory path.",
+    "keywords": ["mkdir", "make directory", "create folder", "new folder", "directory"],
+    "intent_phrases": [
+      "create new folder",
+      "make a new directory",
+      "create subdirectory",
+      "mkdir new project folder"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "file_new_empty_file",
+    "category": "filesystem",
+    "command": "New-Item -ItemType File -Path \"<filename>\"",
+    "aliases": ["touch", "ni -type file", "create file"],
+    "description": "Create a new blank file at the specified path.",
+    "keywords": ["touch", "create file", "new file", "blank file", "make file"],
+    "intent_phrases": [
+      "create new empty file",
+      "touch file",
+      "make blank text file",
+      "create file at path"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "file_test_exists",
+    "category": "filesystem",
+    "command": "Test-Path -Path \"<path>\"",
+    "aliases": ["test-path", "file exists", "check file"],
+    "description": "Test whether a file or folder path exists on disk, returning True or False.",
+    "keywords": ["check", "exists", "path", "verify", "test-path", "presence"],
+    "intent_phrases": [
+      "check if file or folder exists",
+      "verify whether path is valid",
+      "test if directory exists",
+      "check file presence"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "file_count_lines",
+    "category": "filesystem",
+    "command": "(Get-Content \"<file>\" | Measure-Object -Line).Lines",
+    "aliases": ["wc -l", "count lines", "measure lines"],
+    "description": "Count the number of lines in a text file.",
+    "keywords": ["count", "lines", "wc", "measure", "line count", "length"],
+    "intent_phrases": [
+      "count lines in file",
+      "get total line count",
+      "how many lines are in log",
+      "wc -l equivalent in powershell"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "file_checksum_sha256",
+    "category": "filesystem",
+    "command": "Get-FileHash -Path \"<file>\" -Algorithm SHA256",
+    "aliases": ["sha256sum", "md5sum", "certutil -hashfile", "get-filehash"],
+    "description": "Compute the cryptographic SHA256 checksum or hash of a file.",
+    "keywords": ["hash", "sha256", "checksum", "integrity", "verify", "md5"],
+    "intent_phrases": [
+      "calculate file sha256 checksum",
+      "verify file hash",
+      "check sha256 hash of download",
+      "compute file integrity hash"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "file_print_working_dir",
+    "category": "filesystem",
+    "command": "(Get-Location).Path",
+    "aliases": ["pwd", "gl", "cd .", "working directory"],
+    "description": "Print the current working directory full path.",
+    "keywords": ["pwd", "current directory", "working path", "where am i", "location"],
+    "intent_phrases": [
+      "print current working directory",
+      "get current folder path",
+      "show where am i in filesystem",
+      "display pwd path"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "net_test_port",
+    "category": "network",
+    "command": "Test-NetConnection -ComputerName <host> -Port <port>",
+    "aliases": ["tnc", "telnet", "nc -zv", "test-port"],
+    "description": "Test TCP network connectivity to a specific host and port number.",
+    "keywords": ["port", "tcp", "connection", "connect", "reach", "open port", "test"],
+    "intent_phrases": [
+      "test if port is open on server",
+      "check tcp connection to remote port",
+      "see if port 8080 is reachable",
+      "test remote server port"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "net_ping_host",
+    "category": "network",
+    "command": "Test-Connection -TargetName <host> -Count 4",
+    "aliases": ["ping", "test-connection", "icmp"],
+    "description": "Send ICMP echo ping packets to check host reachability and latency.",
+    "keywords": ["ping", "icmp", "latency", "reachability", "host", "online"],
+    "intent_phrases": [
+      "ping a remote host",
+      "check if server is reachable by ping",
+      "test network latency to google",
+      "verify internet connectivity"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "net_listening_ports",
+    "category": "network",
+    "command": "Get-NetTCPConnection -State Listen | Select-Object LocalAddress, LocalPort, OwningProcess",
+    "aliases": ["netstat -ano", "ss -lntp", "lsof -i", "listening ports"],
+    "description": "List all active TCP listening ports and their owning process IDs.",
+    "keywords": ["listening", "ports", "netstat", "open ports", "tcp", "bind"],
+    "intent_phrases": [
+      "list all listening ports on machine",
+      "find which process is using port 3000",
+      "show open listening tcp sockets",
+      "see active listening network ports"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "net_http_get_json",
+    "category": "network",
+    "command": "Invoke-RestMethod -Uri \"<url>\" -Method Get",
+    "aliases": ["irm", "curl", "http get", "fetch json"],
+    "description": "Send an HTTP GET request to an API endpoint and parse JSON response.",
+    "keywords": ["api", "json", "rest", "http", "curl", "request", "get"],
+    "intent_phrases": [
+      "call rest api and get json",
+      "send http get request",
+      "fetch data from json endpoint",
+      "curl api endpoint in powershell"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "net_download_file",
+    "category": "network",
+    "command": "Invoke-WebRequest -Uri \"<url>\" -OutFile \"<destination>\"",
+    "aliases": ["wget", "iwr", "curl -o", "download"],
+    "description": "Download a file from a URL and save it to a local disk path.",
+    "keywords": ["download", "wget", "fetch", "save", "url", "file", "web"],
+    "intent_phrases": [
+      "download file from url",
+      "save web file to disk",
+      "wget file from link",
+      "download zip from website"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "net_ip_config",
+    "category": "network",
+    "command": "Get-NetIPAddress -AddressFamily IPv4 | Where-Object IPAddress -ne '127.0.0.1'",
+    "aliases": ["ipconfig", "ifconfig", "ip a", "show ip"],
+    "description": "Display local machine network interface IPv4 addresses.",
+    "keywords": ["ip", "ipconfig", "address", "interface", "network", "local ip"],
+    "intent_phrases": [
+      "show my local ip address",
+      "get machine ipv4 addresses",
+      "check network adapter ip config",
+      "view local network ip"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "net_dns_resolve",
+    "category": "network",
+    "command": "Resolve-DnsName -Name \"<domain>\"",
+    "aliases": ["nslookup", "dig", "host", "resolve-dns"],
+    "description": "Query DNS records (A, AAAA, CNAME) for a given domain name.",
+    "keywords": ["dns", "lookup", "nslookup", "resolve", "domain", "ip", "records"],
+    "intent_phrases": [
+      "resolve domain name to ip",
+      "dns lookup for website",
+      "nslookup domain records",
+      "query dns host address"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "net_flush_dns",
+    "category": "network",
+    "command": "Clear-DnsClientCache",
+    "aliases": ["ipconfig /flushdns", "flushdns", "clear dns"],
+    "description": "Clear and flush the local Windows DNS client resolver cache.",
+    "keywords": ["flush", "dns", "cache", "clear", "resolver", "reset"],
+    "intent_phrases": [
+      "flush dns cache",
+      "clear local dns resolver entries",
+      "reset dns cache on windows",
+      "refresh dns records"
+    ],
+    "risk_level": "warning",
+    "risk_reason": "Clears all cached name resolutions; may temporarily increase DNS lookup latencies."
+  },
+  {
+    "id": "net_trace_route",
+    "category": "network",
+    "command": "Test-NetConnection -ComputerName <host> -TraceRoute",
+    "aliases": ["tracert", "traceroute", "trace hops"],
+    "description": "Trace the network route and intermediate hops to a destination host.",
+    "keywords": ["traceroute", "tracert", "hops", "route", "network", "path"],
+    "intent_phrases": [
+      "traceroute to remote host",
+      "show network hops to destination",
+      "trace network route to server",
+      "diagnose connection routing"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "sys_service_list",
+    "category": "system",
+    "command": "Get-Service | Where-Object Status -eq 'Running'",
+    "aliases": ["services", "get-service", "systemctl list-units"],
+    "description": "List all active and running Windows services.",
+    "keywords": ["services", "running", "status", "daemon", "windows service"],
+    "intent_phrases": [
+      "list all running services",
+      "view active windows services",
+      "see which services are started",
+      "check background services"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "sys_service_restart",
+    "category": "system",
+    "command": "Restart-Service -Name \"<service>\" -Force",
+    "aliases": ["restart service", "systemctl restart", "bounce service"],
+    "description": "Restart a Windows system service forcibly.",
+    "keywords": ["restart", "service", "bounce", "reload", "daemon"],
+    "intent_phrases": [
+      "restart windows service",
+      "reboot service daemon",
+      "restart wuauserv service",
+      "bounce background service"
+    ],
+    "risk_level": "warning",
+    "risk_reason": "Temporarily interrupts service availability and dependent processes."
+  },
+  {
+    "id": "sys_service_stop",
+    "category": "system",
+    "command": "Stop-Service -Name \"<service>\" -Force",
+    "aliases": ["stop service", "systemctl stop", "disable service"],
+    "description": "Stop a running Windows system service.",
+    "keywords": ["stop", "service", "halt", "shutdown service", "terminate service"],
+    "intent_phrases": [
+      "stop a running windows service",
+      "halt background system service",
+      "shut down specific service",
+      "disable running service"
+    ],
+    "risk_level": "warning",
+    "risk_reason": "Disables active system service functionality and dependent applications."
+  },
+  {
+    "id": "sys_service_start",
+    "category": "system",
+    "command": "Start-Service -Name \"<service>\"",
+    "aliases": ["start service", "systemctl start"],
+    "description": "Start an existing stopped Windows service.",
+    "keywords": ["start", "service", "launch service", "begin service"],
+    "intent_phrases": [
+      "start stopped windows service",
+      "turn on system service",
+      "activate background service",
+      "launch service daemon"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "sys_system_info",
+    "category": "system",
+    "command": "Get-ComputerInfo | Select-Object WindowsProductName, OsHardwareAbstractionLayer, TotalPhysicalMemory",
+    "aliases": ["systeminfo", "uname -a", "neofetch", "specs"],
+    "description": "Retrieve comprehensive OS, hardware, and physical memory specifications.",
+    "keywords": ["systeminfo", "os", "hardware", "specs", "memory", "ram", "version"],
+    "intent_phrases": [
+      "show system hardware and os info",
+      "view computer specifications",
+      "check total ram and windows version",
+      "display pc system info"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "sys_disk_usage",
+    "category": "system",
+    "command": "Get-PSDrive -PSProvider FileSystem | Select-Object Root, Used, Free",
+    "aliases": ["df -h", "disk space", "free disk", "get-psdrive"],
+    "description": "Check available free space and used space across mounted file system drives.",
+    "keywords": ["disk", "storage", "free space", "drive", "usage", "capacity", "df"],
+    "intent_phrases": [
+      "check free disk space on drives",
+      "show storage usage for hard drives",
+      "view disk partition capacity",
+      "see how much drive space is left"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "sys_uptime",
+    "category": "system",
+    "command": "(Get-Uptime).TotalHours",
+    "aliases": ["uptime", "boot time", "system uptime"],
+    "description": "Display how long the Windows system has been running since last boot.",
+    "keywords": ["uptime", "boot", "time", "running time", "reboot time"],
+    "intent_phrases": [
+      "check how long system has been up",
+      "show machine uptime in hours",
+      "see time since last reboot",
+      "display computer uptime"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "sys_reboot_machine",
+    "category": "system",
+    "command": "Restart-Computer -Force",
+    "aliases": ["reboot", "shutdown /r", "restart system"],
+    "description": "Immediately and forcibly reboot the Windows operating system.",
+    "keywords": ["reboot", "restart", "system", "machine", "pc", "force"],
+    "intent_phrases": [
+      "reboot the computer immediately",
+      "force restart windows machine",
+      "restart the system now",
+      "reboot pc"
+    ],
+    "risk_level": "dangerous",
+    "risk_reason": "Immediately reboots the operating system; closes all open apps and loses unsaved work."
+  },
+  {
+    "id": "sys_shutdown_machine",
+    "category": "system",
+    "command": "Stop-Computer -Force",
+    "aliases": ["shutdown", "poweroff", "shutdown /s", "halt"],
+    "description": "Immediately and forcibly power off and shut down the computer.",
+    "keywords": ["shutdown", "power off", "turn off", "halt", "kill system"],
+    "intent_phrases": [
+      "shut down computer completely",
+      "power off machine immediately",
+      "turn off pc from command line",
+      "force system shutdown"
+    ],
+    "risk_level": "dangerous",
+    "risk_reason": "Powers down the machine immediately; unsaved user sessions and files are lost."
+  },
+  {
+    "id": "sys_clear_recycle_bin",
+    "category": "system",
+    "command": "Clear-RecycleBin -Force",
+    "aliases": ["empty trash", "clean recycle bin", "empty-recyclebin"],
+    "description": "Permanently empty and delete all files in the Windows Recycle Bin across all drives.",
+    "keywords": ["recycle bin", "trash", "empty", "purge", "clear", "deleted files"],
+    "intent_phrases": [
+      "empty windows recycle bin",
+      "purge deleted files in trash",
+      "clean up recycle bin completely",
+      "permanently empty trash can"
+    ],
+    "risk_level": "dangerous",
+    "risk_reason": "Permanently purges all items from the Recycle Bin; cannot be restored."
+  },
+  {
+    "id": "env_list_all",
+    "category": "environment",
+    "command": "Get-ChildItem Env:",
+    "aliases": ["env", "printenv", "set", "get-childitem env:"],
+    "description": "List all active shell environment variables and their values.",
+    "keywords": ["env", "environment", "variables", "printenv", "values", "settings"],
+    "intent_phrases": [
+      "list all environment variables",
+      "print environment variables",
+      "view current shell env vars",
+      "show system environment settings"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "env_get_value",
+    "category": "environment",
+    "command": "$env:<VARIABLE_NAME>",
+    "aliases": ["echo %VAR%", "echo $VAR", "get env"],
+    "description": "Print the current value of a specific environment variable.",
+    "keywords": ["echo", "env", "value", "variable", "read env"],
+    "intent_phrases": [
+      "read value of environment variable",
+      "print specific env variable",
+      "check value of env var",
+      "echo environment setting"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "env_set_temp",
+    "category": "environment",
+    "command": "$env:<VARIABLE_NAME> = \"<value>\"",
+    "aliases": ["export", "set VAR=", "set env"],
+    "description": "Set or modify an environment variable for the current PowerShell session.",
+    "keywords": ["export", "set", "variable", "session", "assign", "environment"],
+    "intent_phrases": [
+      "set environment variable for current session",
+      "export new env var in powershell",
+      "assign temporary environment value",
+      "define environment variable"
+    ],
+    "risk_level": "warning",
+    "risk_reason": "Changes environment variables in current session, which affects child processes."
+  },
+  {
+    "id": "env_path_inspect",
+    "category": "environment",
+    "command": "$env:PATH -split ';'",
+    "aliases": ["show path", "echo $PATH", "path entries"],
+    "description": "Split and display each directory listed in the system PATH environment variable.",
+    "keywords": ["path", "split", "directories", "bin", "executable", "lookups"],
+    "intent_phrases": [
+      "show system path directories line by line",
+      "inspect path environment variable entries",
+      "see all directories in path",
+      "split path variable"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "env_set_exec_policy",
+    "category": "environment",
+    "command": "Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser",
+    "aliases": ["set-executionpolicy", "enable scripts", "allow powershell scripts"],
+    "description": "Change the PowerShell script execution policy to allow running local scripts.",
+    "keywords": ["execution policy", "scripts", "remotesigned", "permissions", "security"],
+    "intent_phrases": [
+      "allow running powershell scripts",
+      "set execution policy to remotesigned",
+      "fix script execution disabled error",
+      "enable unsigned local ps1 scripts"
+    ],
+    "risk_level": "warning",
+    "risk_reason": "Lowers PowerShell execution policy restrictions, allowing downloaded or unsigned scripts to run."
+  },
+  {
+    "id": "arch_zip_folder",
+    "category": "archive",
+    "command": "Compress-Archive -Path \"<source>\" -DestinationPath \"<archive.zip>\" -Force",
+    "aliases": ["zip", "compress", "tar -czf", "compress-archive"],
+    "description": "Compress files or folders into a zip archive file.",
+    "keywords": ["zip", "compress", "archive", "pack", "bundle"],
+    "intent_phrases": [
+      "compress directory into zip file",
+      "create zip archive from folder",
+      "zip files together",
+      "pack folder into zip"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "arch_unzip_file",
+    "category": "archive",
+    "command": "Expand-Archive -Path \"<archive.zip>\" -DestinationPath \"<destination>\" -Force",
+    "aliases": ["unzip", "extract", "tar -xzf", "expand-archive"],
+    "description": "Extract and decompress files from a zip archive into a destination directory.",
+    "keywords": ["unzip", "extract", "decompress", "archive", "unpack"],
+    "intent_phrases": [
+      "unzip zip file into folder",
+      "extract archive contents to directory",
+      "decompress zip package",
+      "unpack zip archive"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "sys_clear_screen",
+    "category": "system",
+    "command": "Clear-Host",
+    "aliases": ["cls", "clear", "clear-host"],
+    "description": "Clear the terminal console screen buffer.",
+    "keywords": ["clear", "cls", "clean screen", "wipe console", "terminal"],
+    "intent_phrases": [
+      "clear terminal screen",
+      "wipe console output",
+      "clean up terminal window",
+      "clear host buffer"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  },
+  {
+    "id": "sys_command_history",
+    "category": "system",
+    "command": "Get-History",
+    "aliases": ["history", "h", "get-history"],
+    "description": "List commands entered during the current PowerShell session.",
+    "keywords": ["history", "past commands", "recent", "log", "previous"],
+    "intent_phrases": [
+      "show command history",
+      "view previously executed commands",
+      "see past entered commands",
+      "get terminal command log"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null
+  }
+]
