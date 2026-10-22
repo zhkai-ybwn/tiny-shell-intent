@@ -197,29 +197,30 @@ def evaluate_retrieval_accuracy(
 def benchmark_latency(
     engine: IntentEngine,
     queries: List[str],
-    iterations: int = 5,
+    iterations: int = 3,
 ) -> Dict[str, Dict[str, float]]:
-    """Measure P50, P90, P95, P99, and Mean search latencies for each mode."""
+    """Measure P50, P90, P95, P99, and Mean search latencies.
+
+    To provide honest, realistic benchmark data, latencies are explicitly separated into:
+    1. Uncached Warm Search: Engine cache is cleared before each query to measure true inference/matching.
+    2. Cache Hit: Repeated identical queries hitting the internal LRU cache.
+    3. Unambiguous Exact Short-Circuit: Deterministic exact rules bypassing model inference.
+    """
     modes = ["rule", "fuzzy", "model", "hybrid"]
     latency_report = {}
 
-    # Warmup
+    # Warmup (force lazy model loading and index preparation)
     for q in queries[:10]:
         for mode in modes:
             _ = engine.search(q, top_k=3, mode=mode)
 
-    # Test short-circuit exact query latency separately
-    exact_latencies = []
-    for _ in range(iterations * 2):
-        for eq in ["pwd", "cls"]:
-            t0 = time.perf_counter()
-            _ = engine.search(eq, top_k=3, mode="hybrid")
-            exact_latencies.append((time.perf_counter() - t0) * 1000)
-
+    # 1. Measure Uncached Warm Latencies for all modes
     for mode in modes:
         latencies = []
         for _ in range(iterations):
             for q in queries:
+                # Clear cache before search to avoid LRU cache distortion
+                engine._cache.clear()
                 t0 = time.perf_counter()
                 _ = engine.search(q, top_k=3, mode=mode)
                 elapsed_ms = (time.perf_counter() - t0) * 1000
@@ -236,11 +237,40 @@ def benchmark_latency(
             "max_ms": round(float(np.max(latencies_arr)), 3),
         }
 
+    # 2. Measure Cache Hit Latency
+    cache_latencies = []
+    # Prime cache
+    _ = engine.search(queries[0], top_k=3, mode="hybrid")
+    for _ in range(300):
+        t0 = time.perf_counter()
+        _ = engine.search(queries[0], top_k=3, mode="hybrid")
+        cache_latencies.append((time.perf_counter() - t0) * 1000)
+
+    arr_cache = np.array(cache_latencies)
+    latency_report["cache_hit"] = {
+        "mean_ms": round(float(np.mean(arr_cache)), 3),
+        "p50_ms": round(float(np.percentile(arr_cache, 50)), 3),
+        "p90_ms": round(float(np.percentile(arr_cache, 90)), 3),
+        "p95_ms": round(float(np.percentile(arr_cache, 95)), 3),
+        "p99_ms": round(float(np.percentile(arr_cache, 99)), 3),
+    }
+
+    # 3. Measure Short-circuit Exact Query Latency (Uncached)
+    exact_latencies = []
+    for _ in range(50):
+        for eq in ["pwd", "cls"]:
+            engine._cache.clear()
+            t0 = time.perf_counter()
+            _ = engine.search(eq, top_k=3, mode="hybrid")
+            exact_latencies.append((time.perf_counter() - t0) * 1000)
+
     arr_exact = np.array(exact_latencies)
     latency_report["short_circuit_exact"] = {
         "mean_ms": round(float(np.mean(arr_exact)), 3),
         "p50_ms": round(float(np.percentile(arr_exact, 50)), 3),
+        "p90_ms": round(float(np.percentile(arr_exact, 90)), 3),
         "p95_ms": round(float(np.percentile(arr_exact, 95)), 3),
+        "p99_ms": round(float(np.percentile(arr_exact, 99)), 3),
     }
 
     return latency_report
@@ -369,21 +399,25 @@ def print_evaluation_summary(
     # 5. Latency Distribution
     print("\n[5] RETRIEVAL LATENCY BENCHMARK (ms)")
     print("-" * 78)
-    print(f"{'Mode':<22} | {'Mean':<8} | {'P50':<8} | {'P90':<8} | {'P95':<8} | {'P99':<8}")
+    print(f"{'Execution Mode / Scenario':<28} | {'Mean':<8} | {'P50':<8} | {'P90':<8} | {'P95':<8} | {'P99':<8}")
     print("-" * 78)
     for mode in ["rule", "fuzzy", "model", "hybrid"]:
         lat = latency_info[mode]
+        label = f"{mode.upper()} (Uncached Warm)"
         print(
-            f"{mode.upper():<22} | "
+            f"{label:<28} | "
             f"{lat['mean_ms']:<8.3f} | "
             f"{lat['p50_ms']:<8.3f} | "
             f"{lat['p90_ms']:<8.3f} | "
             f"{lat['p95_ms']:<8.3f} | "
             f"{lat['p99_ms']:<8.3f}"
         )
+    ch = latency_info.get("cache_hit")
+    if ch:
+        print(f"{'CACHE HIT (LRU)':<28} | {ch['mean_ms']:<8.3f} | {ch['p50_ms']:<8.3f} | {ch['p90_ms']:<8.3f} | {ch['p95_ms']:<8.3f} | {ch['p99_ms']:<8.3f}")
     sc = latency_info.get("short_circuit_exact")
     if sc:
-        print(f"{'EXACT SHORT-CIRCUIT':<22} | {sc['mean_ms']:<8.3f} | {sc['p50_ms']:<8.3f} | {'-':<8} | {sc['p95_ms']:<8.3f} | {'-':<8}")
+        print(f"{'EXACT SHORT-CIRCUIT':<28} | {sc['mean_ms']:<8.3f} | {sc['p50_ms']:<8.3f} | {sc['p90_ms']:<8.3f} | {sc['p95_ms']:<8.3f} | {sc['p99_ms']:<8.3f}")
 
     # 6. OOD & Special Suites
     print("\n[6] OUT-OF-DOMAIN & NEGATIVE SAMPLE REJECTION")

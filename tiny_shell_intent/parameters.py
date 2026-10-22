@@ -18,6 +18,41 @@ HOSTNAME_PATTERN = re.compile(
     r"^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
 )
 
+# Regex helpers for entity extraction and entity protection
+IPV4_REGEX = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
+URL_REGEX = re.compile(r"https?://[^\s'\"]+", re.IGNORECASE)
+FILE_EXT_REGEX = re.compile(
+    r"\b[\w-]+\.(?:tmp|txt|log|json|csv|py|md|ps1|bak|xml|yml|yaml|ini|cfg|zip|tar|gz|sh|exe|dll)\b",
+    re.IGNORECASE,
+)
+ENV_VAR_REGEX = re.compile(r"\b([A-Z_][A-Z0-9_]{1,63})\b")
+
+
+def mask_structured_entities(text: str) -> Tuple[str, Dict[str, str]]:
+    """Mask IP addresses, URLs, and paths to protect them during numeric/token extraction.
+
+    This prevents standalone port/PID regexes from accidentally matching subfields of
+    IP addresses (e.g. matching '192' in '192.168.1.1').
+    """
+    masked = text
+    entities: Dict[str, str] = {}
+
+    # 1. Mask URLs
+    def _url_sub(match):
+        key = f"__URL_{len(entities)}__"
+        entities[key] = match.group(0)
+        return key
+    masked = URL_REGEX.sub(_url_sub, masked)
+
+    # 2. Mask IPv4 addresses
+    def _ip_sub(match):
+        key = f"__IP_{len(entities)}__"
+        entities[key] = match.group(0)
+        return key
+    masked = IPV4_REGEX.sub(_ip_sub, masked)
+
+    return masked, entities
+
 
 def escape_powershell_literal(value: str) -> str:
     """Safely format a string as a PowerShell single-quoted literal.
@@ -83,82 +118,154 @@ def extract_parameters_from_query(
     Returns:
         (extracted_dict, is_complete)
     """
+    has_placeholders = bool(re.search(r"<[^>]+>", intent.command))
+
     if not intent.parameter_slots:
-        # Intent does not require any parameters
-        return {}, True
+        # If template contains placeholders but no slots are defined, it cannot be complete!
+        return {}, not has_placeholders
 
     clean_q = query.strip()
     extracted: Dict[str, Any] = {}
     slots_by_name = {s.name: s for s in intent.parameter_slots}
 
-    # Intent-specific rule-based extraction
+    # Mask structured entities (IP addresses, URLs) to avoid mis-extracting subfields
+    masked_q, entity_map = mask_structured_entities(clean_q)
+
+    # 1. net_test_port (requires 'host' and 'port')
     if intent.id == "net_test_port":
-        # 1. Port extraction (e.g. "port 8080", "8080", ":8080")
-        port_match = re.search(r"\bport\s*[:=]?\s*(\d{1,5})\b", clean_q, re.IGNORECASE)
+        # Port extraction: STRICT context required. Never extract arbitrary digits!
+        port_match = re.search(r"\bport\s*[:=]?\s*(\d{1,5})\b", masked_q, re.IGNORECASE)
         if not port_match:
-            port_match = re.search(r":(\d{1,5})\b", clean_q)
+            port_match = re.search(r"\bon\s+port\s+(\d{1,5})\b", masked_q, re.IGNORECASE)
         if not port_match:
-            # Standalone digits if preceding word is host or following word is on/port
-            port_match = re.search(r"\b(\d{2,5})\b", clean_q)
+            port_match = re.search(r"\b(\d{1,5})\s*/(?:tcp|udp)\b", masked_q, re.IGNORECASE)
+        if not port_match:
+            # Match colon-separated port (e.g. localhost:8080) on masked string (IPs are protected)
+            port_match = re.search(r"(?<![\.\d]):(\d{1,5})\b", masked_q)
 
         if port_match:
             extracted["port"] = port_match.group(1)
 
-        # 2. Host extraction (e.g. "on localhost", "to 192.168.1.1", "host api.com")
-        host_match = re.search(r"\b(?:on|to|host|server|at)\s+([a-zA-Z0-9.-]+)\b", clean_q, re.IGNORECASE)
-        if not host_match:
-            # Check for standalone IPv4 or "localhost"
-            ip_m = re.search(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", clean_q)
-            if ip_m:
-                extracted["host"] = ip_m.group(0)
-            elif re.search(r"\blocalhost\b", clean_q, re.IGNORECASE):
-                extracted["host"] = "localhost"
-        else:
-            cand_host = host_match.group(1)
-            # Avoid picking up numbers as host
-            if not cand_host.isdigit():
-                extracted["host"] = cand_host
-
-    elif intent.id == "net_ping_host":
-        ip_m = re.search(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", clean_q)
+        # Host extraction
+        ip_m = IPV4_REGEX.search(clean_q)
         if ip_m:
             extracted["host"] = ip_m.group(0)
+        elif re.search(r"\blocalhost\b", clean_q, re.IGNORECASE):
+            extracted["host"] = "localhost"
         else:
-            host_m = re.search(r"\b(?:ping|to|target|reach)\s+([a-zA-Z0-9.-]+)\b", clean_q, re.IGNORECASE)
+            host_m = re.search(r"\b(?:on|to|host|server|at)\s+([a-zA-Z0-9.-]+)\b", clean_q, re.IGNORECASE)
             if host_m and not host_m.group(1).isdigit():
                 extracted["host"] = host_m.group(1)
 
+    # 2. net_ping_host & net_trace_route (host)
+    elif intent.id in ("net_ping_host", "net_trace_route"):
+        ip_m = IPV4_REGEX.search(clean_q)
+        if ip_m:
+            extracted["host"] = ip_m.group(0)
+        elif re.search(r"\blocalhost\b", clean_q, re.IGNORECASE):
+            extracted["host"] = "localhost"
+        else:
+            host_m = re.search(
+                r"\b(?:ping|to|target|reach|gateway|host|server|traceroute)\s+([a-zA-Z0-9.-]+)\b",
+                clean_q,
+                re.IGNORECASE,
+            )
+            if host_m and not host_m.group(1).isdigit():
+                extracted["host"] = host_m.group(1)
+
+    # 3. net_dns_resolve (domain)
+    elif intent.id == "net_dns_resolve":
+        m = re.search(r"\b(?:resolve|lookup|dns|name)\s+([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\b", clean_q, re.IGNORECASE)
+        if not m:
+            m = re.search(r"\b([a-zA-Z0-9-]+\.[a-zA-Z]{2,})\b", clean_q)
+        if m:
+            extracted["domain"] = m.group(1)
+
+    # 4. proc_kill_id (pid)
     elif intent.id == "proc_kill_id":
-        pid_m = re.search(r"\b(?:pid|process|id|task)?\s*[:=]?\s*(\d{2,7})\b", clean_q, re.IGNORECASE)
+        # Search on masked_q so subfields of IPs or URLs are not treated as PIDs
+        pid_m = re.search(r"\b(?:pid|process\s*id|task\s*id)\s*[:=]?\s*(\d{2,7})\b", masked_q, re.IGNORECASE)
         if not pid_m:
-            pid_m = re.search(r"\b(\d{2,7})\b", clean_q)
+            pid_m = re.search(r"\b(?:kill|terminate|stop-process)\s+(?:-id\s+)?(\d{2,7})\b", masked_q, re.IGNORECASE)
+        if not pid_m:
+            pid_m = re.search(r"\bprocess\s+(\d{2,7})\b", masked_q, re.IGNORECASE)
+        if not pid_m and any(w in clean_q.lower() for w in ("kill", "terminate", "stop")):
+            # Fallback to standalone number only if action keyword is explicitly kill/stop
+            pid_m = re.search(r"\b(\d{2,7})\b", masked_q)
+
         if pid_m:
             extracted["pid"] = pid_m.group(1)
 
-    elif intent.id == "proc_kill_name":
-        # If query has digit PID, it shouldn't be captured as a process name!
-        name_m = re.search(r"\b(?:process\s+named|named|kill|stop-process)\s+([a-zA-Z_][a-zA-Z0-9_.-]*)\b", clean_q, re.IGNORECASE)
+    # 5. proc_kill_name & proc_wait (name)
+    elif intent.id in ("proc_kill_name", "proc_wait"):
+        name_m = re.search(
+            r"\b(?:process\s+named|named|kill|stop-process|wait-process|wait\s+for)\s+([a-zA-Z_][a-zA-Z0-9_.-]*)\b",
+            clean_q,
+            re.IGNORECASE,
+        )
         if name_m:
             proc_val = name_m.group(1).lower()
-            if proc_val not in ("process", "immediately", "force", "task", "named", "id", "pid"):
+            if proc_val not in ("process", "immediately", "force", "task", "named", "id", "pid", "for"):
                 extracted["name"] = proc_val
         elif len(clean_q.split()) == 2 and clean_q.split()[0].lower() in ("kill", "pkill"):
             second = clean_q.split()[1]
             if not second.isdigit():
                 extracted["name"] = second
 
+    # 6. proc_find (name)
     elif intent.id == "proc_find":
-        m = re.search(r"\b(?:if|find|check|search\s+for)\s+([a-zA-Z_][a-zA-Z0-9_.-]*)\s+(?:is\s+running|is\s+open|process)?\b", clean_q, re.IGNORECASE)
+        m = re.search(
+            r"\b(?:if|find|check|search\s+for|is\s+my)\s+([a-zA-Z_][a-zA-Z0-9_.-]*)\s+(?:daemon|service|process|is\s+running|running|open)?\b",
+            clean_q,
+            re.IGNORECASE,
+        )
         if m:
-            extracted["name"] = m.group(1)
+            cand = m.group(1).lower()
+            if cand not in ("a", "the", "my", "process", "service", "daemon", "if"):
+                extracted["name"] = cand
 
+    # 7. sys_service_* (service)
     elif intent.id in ("sys_service_restart", "sys_service_stop", "sys_service_start"):
-        # e.g. "restart spooler printing service" -> service="spooler"
-        srv_m = re.search(r"\b(?:restart|stop|start|bounce)\s+([a-zA-Z0-9_.-]+)\s+(?:service|daemon)?\b", clean_q, re.IGNORECASE)
+        srv_m = re.search(
+            r"\b(?:restart|stop|start|bounce)\s+([a-zA-Z0-9_.-]+)\s+(?:service|daemon)?\b",
+            clean_q,
+            re.IGNORECASE,
+        )
         if srv_m:
             cand = srv_m.group(1)
             if cand.lower() not in ("service", "daemon", "windows", "the", "a"):
                 extracted["service"] = cand
+
+    # 8. Single file operations: file_delete_single, file_test_exists, file_read_head, file_read_tail, etc.
+    elif intent.id in ("file_delete_single", "file_test_exists", "file_read_head", "file_read_tail", "file_count_lines", "file_checksum_sha256"):
+        # Match explicit filename with extension (e.g. data.tmp, app.log, notes.txt)
+        file_m = FILE_EXT_REGEX.search(clean_q)
+        if file_m:
+            target_file = file_m.group(0)
+            slot_name = "path" if "path" in slots_by_name else "file"
+            extracted[slot_name] = target_file
+        else:
+            # Check for quoted string
+            q_str = re.search(r"['\"]([^'\"]+)['\"]", clean_q)
+            if q_str:
+                slot_name = "path" if "path" in slots_by_name else "file"
+                extracted[slot_name] = q_str.group(1)
+
+    # 9. Environment variable queries
+    elif intent.id == "env_get_value":
+        # Look for uppercase identifier (e.g. USERPROFILE, PATH, TEMP)
+        for token in clean_q.split():
+            clean_token = token.strip("$%:;,.")
+            if clean_token.isupper() and len(clean_token) >= 2 and clean_token not in ("GET", "CHECK", "WHAT", "SET", "TO", "IS", "ENV"):
+                extracted["variable_name"] = clean_token
+                break
+
+    elif intent.id == "env_set_temp":
+        # e.g. "set NODE_ENV to production in this console"
+        m = re.search(r"\bset\s+([A-Z_][A-Z0-9_]*)\s+(?:to|=)\s+([^\s]+)", clean_q, re.IGNORECASE)
+        if m:
+            extracted["variable_name"] = m.group(1)
+            extracted["value"] = m.group(2)
 
     # Validate all extracted parameters
     validated: Dict[str, Any] = {}
@@ -187,7 +294,8 @@ def render_command_safely(
     """Render a PowerShell command template safely replacing placeholders.
 
     Returns:
-        Rendered command string, or None if required parameters are missing.
+        Rendered command string, or None if required parameters are missing or
+        unresolved placeholders remain.
     """
     if not parameters and intent.parameter_slots:
         return None
@@ -207,22 +315,18 @@ def render_command_safely(
         if slot.type == "int":
             rendered = rendered.replace(placeholder, str(val))
         elif slot.type in ("hostname", "string", "path"):
-            # If the placeholder is enclosed in quotes in the template (e.g. "<name>"),
-            # replace "<name>" with the single-quoted literal, or replace <name> safely
             quoted_placeholder = f'"{placeholder}"'
             single_quoted_val = escape_powershell_literal(str(val))
             if quoted_placeholder in rendered:
                 rendered = rendered.replace(quoted_placeholder, single_quoted_val)
             else:
-                # If slot is hostname, unquoted safe hostname or single quoted
                 if slot.type == "hostname" and (HOSTNAME_PATTERN.match(str(val)) or IPV4_PATTERN.match(str(val))):
                     rendered = rendered.replace(placeholder, str(val))
                 else:
                     rendered = rendered.replace(placeholder, single_quoted_val)
 
-    # If any unresolved required placeholder remains, render is incomplete
-    for slot in intent.parameter_slots:
-        if slot.required and slot.placeholder in rendered:
-            return None
+    # If any unresolved placeholder remains in the rendered string, it is NOT executable!
+    if re.search(r"<[^>]+>", rendered):
+        return None
 
     return rendered

@@ -20,6 +20,12 @@ DELETE_ACTIONS = {"delete", "remove", "erase", "wipe", "destroy", "purge", "tras
 COPY_ACTIONS = {"copy", "clone", "duplicate", "backup", "cp"}
 UPTIME_QUERY_ACTIONS = {"how long", "how many", "uptime", "turned on", "running time", "boot time", "since reboot"}
 
+# Valid external tools that are outside the 50-intent PowerShell baseline
+EXTERNAL_CLI_TOOLS = {
+    "git", "docker", "kubectl", "npm", "yarn", "pnpm", "cargo", "pip", "python",
+    "node", "mvn", "gradle", "terraform", "aws", "az", "gcloud", "apt", "apt-get",
+    "chmod", "chown", "brew", "choco", "winget"
+}
 
 # Non-shell technical and programming language patterns (near-domain negative triggers)
 NON_SHELL_PATTERNS = [
@@ -54,20 +60,20 @@ class IntentEngine:
         self._cache: Dict[str, QueryResult] = {}
 
     @property
+    def is_model_loaded(self) -> bool:
+        """Check whether the neural ModelMatcher has been loaded into memory."""
+        return self._model_matcher is not None
+
+    @property
     def model_matcher(self) -> ModelMatcher:
         """On-demand initialization of the Model2Vec semantic matcher."""
         if self._model_matcher is None:
             self._model_matcher = ModelMatcher(
-                self.store,
+                store=self.store,
                 model_name_or_path=self.model_path,
                 offline_mode=self.offline_mode,
             )
         return self._model_matcher
-
-    @property
-    def is_model_loaded(self) -> bool:
-        """Check whether the neural embedding model has been loaded into memory."""
-        return self._model_matcher is not None
 
     def search(
         self,
@@ -76,58 +82,25 @@ class IntentEngine:
         mode: str = "hybrid",
         ood_threshold: float = 0.42,
     ) -> QueryResult:
-        """Search command intent knowledge base for top matching candidates.
+        """Search command intents for a query string across requested modes.
 
-        Args:
-            query: User input query string.
-            top_k: Max candidate commands to return.
-            mode: 'hybrid', 'rule', 'fuzzy', or 'model'.
-            ood_threshold: Score threshold below which queries are treated as out-of-domain.
-
-        Returns:
-            QueryResult containing top candidate commands and execution metadata.
+        Modes:
+            - "hybrid": Rule exact -> Fuzzy + Model weighted fusion with intent constraints
+            - "rule": RuleMatcher only
+            - "fuzzy": FuzzyMatcher only
+            - "model": ModelMatcher only
         """
         start_time = time.perf_counter()
 
-        # 1. Empty or whitespace check
-        if not query or not query.strip():
-            elapsed = (time.perf_counter() - start_time) * 1000
-            return QueryResult(
-                query=query,
-                candidates=[],
-                debug_candidates=[],
-                confidence_level=ConfidenceLevel.REJECTED,
-                is_accepted=False,
-                is_rejected=True,
-                rejection_reason="empty_input",
-                latency_ms=elapsed,
-                mode=mode,
-                is_empty=True,
-            )
-
-        clean_q = query.strip()
-
-        # 2. Check query cache
-        cache_key = f"{mode}:{top_k}:{clean_q.lower()}"
+        # 1. Check query cache
+        cache_key = f"{mode}:{query.strip()}:{top_k}:{ood_threshold}"
         if cache_key in self._cache:
-            cached = self._cache[cache_key]
-            elapsed = (time.perf_counter() - start_time) * 1000
-            return QueryResult(
-                query=query,
-                candidates=cached.candidates,
-                debug_candidates=cached.debug_candidates,
-                confidence_level=cached.confidence_level,
-                is_accepted=cached.is_accepted,
-                is_rejected=cached.is_rejected,
-                rejection_reason=cached.rejection_reason,
-                latency_ms=elapsed,
-                mode=mode,
-                is_empty=cached.is_empty,
-                is_out_of_domain=cached.is_out_of_domain,
-            )
+            cached_res = self._cache[cache_key]
+            # Fast return from cache
+            return cached_res
 
-        # 3. Unicode / alphanumeric check
-        if not any(c.isalnum() for c in clean_q):
+        # 2. Input normalization and validation
+        if not query or not query.strip():
             elapsed = (time.perf_counter() - start_time) * 1000
             res = QueryResult(
                 query=query,
@@ -136,16 +109,62 @@ class IntentEngine:
                 confidence_level=ConfidenceLevel.REJECTED,
                 is_accepted=False,
                 is_rejected=True,
-                rejection_reason="no_alphanumeric_content",
+                rejection_reason="empty_query",
                 latency_ms=elapsed,
                 mode=mode,
+                is_empty=True,
                 is_out_of_domain=True,
             )
             self._save_to_cache(cache_key, res)
             return res
 
-        # 4. Check for non-Latin / Chinese script (graceful fallback)
+        clean_q = query.strip()
+
+        # 3. Unicode and non-alphanumeric check
+        has_letters_or_digits = any(c.isalnum() for c in clean_q)
+        if not has_letters_or_digits:
+            elapsed = (time.perf_counter() - start_time) * 1000
+            res = QueryResult(
+                query=query,
+                candidates=[],
+                debug_candidates=[],
+                confidence_level=ConfidenceLevel.REJECTED,
+                is_accepted=False,
+                is_rejected=True,
+                rejection_reason="non_alphanumeric_or_symbolic_query",
+                latency_ms=elapsed,
+                mode=mode,
+                is_empty=False,
+                is_out_of_domain=True,
+            )
+            self._save_to_cache(cache_key, res)
+            return res
+
+        # Detect CJK (Chinese/Japanese/Korean)
         has_cjk = any("\u4e00" <= c <= "\u9fff" for c in clean_q)
+
+        # 4. Check for external CLI tools outside the 50-intent PowerShell baseline
+        tokens = clean_q.split()
+        first_token = tokens[0].lower() if tokens else ""
+        if first_token in EXTERNAL_CLI_TOOLS:
+            # Check if this tool is mapped as an alias in KB (e.g. curl/wget)
+            rule_check = self.rule_matcher.match(clean_q, top_k=1)
+            if not rule_check or rule_check[0].score < 0.95:
+                elapsed = (time.perf_counter() - start_time) * 1000
+                res = QueryResult(
+                    query=query,
+                    candidates=[],
+                    debug_candidates=[],
+                    confidence_level=ConfidenceLevel.REJECTED,
+                    is_accepted=False,
+                    is_rejected=True,
+                    rejection_reason="unsupported_external_tool",
+                    latency_ms=elapsed,
+                    mode=mode,
+                    is_out_of_domain=True,
+                )
+                self._save_to_cache(cache_key, res)
+                return res
 
         # 5. Check for non-shell near-domain programming code or Linux syntax
         if any(p.search(clean_q) for p in NON_SHELL_PATTERNS):
@@ -165,7 +184,7 @@ class IntentEngine:
             self._save_to_cache(cache_key, res)
             return res
 
-        # 5. Unambiguous exact match short-circuit (applies to hybrid and rule mode)
+        # 6. Unambiguous exact match short-circuit (applies to hybrid and rule mode)
         # If input is a single token or exact command alias with exactly one mapping (e.g. 'pwd', 'cls')
         if mode in ("hybrid", "rule"):
             rule_candidates = self.rule_matcher.match(clean_q, top_k=top_k)
@@ -177,10 +196,10 @@ class IntentEngine:
                     params, is_complete = extract_parameters_from_query(intent, clean_q)
                     rendered = render_command_safely(intent.command, intent, params)
                     exact_cand.parameters = params
-                    exact_cand.is_complete = is_complete
                     if rendered:
                         exact_cand.rendered_command = rendered
                         exact_cand.command = rendered
+                    exact_cand.is_complete = is_complete and not bool(re.search(r"<[^>]+>", exact_cand.command))
                     eff_risk, eff_reason = evaluate_command_risk(intent, exact_cand.command)
                     exact_cand.risk_level = eff_risk.value
                     if eff_reason:
@@ -200,7 +219,7 @@ class IntentEngine:
                 self._save_to_cache(cache_key, res)
                 return res
 
-        # 6. Single-mode dispatch
+        # 7. Single-mode dispatch
         if mode == "rule":
             candidates = self.rule_matcher.match(clean_q, top_k=top_k)
             self._enrich_candidates(candidates, clean_q)
@@ -257,7 +276,7 @@ class IntentEngine:
             self._save_to_cache(cache_key, res)
             return res
 
-        # 7. Hybrid search fusion
+        # 8. Hybrid search fusion
         accepted_candidates, debug_candidates, conf_level, is_ood, reject_reason = self._hybrid_fusion(
             clean_q, top_k=top_k, ood_threshold=ood_threshold, has_cjk=has_cjk
         )
@@ -285,7 +304,7 @@ class IntentEngine:
         ood_threshold: float = 0.42,
         has_cjk: bool = False,
     ) -> Tuple[List[Candidate], List[Candidate], ConfidenceLevel, bool, Optional[str]]:
-        """Combine rule, fuzzy, and embedding matchers with intent constraints."""
+        """Combine rule, fuzzy, and embedding matchers with intent and scope constraints."""
         # 1. Fetch candidates from all matchers
         rule_candidates = self.rule_matcher.match(query, top_k=10)
         fuzzy_candidates = self.fuzzy_matcher.match(query, top_k=10)
@@ -305,10 +324,36 @@ class IntentEngine:
 
         has_stop = any(w in q_tokens for w in STOP_ACTIONS)
         has_start = any(w in q_tokens for w in START_ACTIONS)
-        has_delete = any(w in q_tokens for w in DELETE_ACTIONS) or "delete" in lower_q
+        has_delete = any(w in q_tokens for w in DELETE_ACTIONS) or "delete" in lower_q or "trash" in lower_q
         has_copy = any(w in q_tokens for w in COPY_ACTIONS) or "clone" in lower_q
         has_uptime = any(k in lower_q for k in UPTIME_QUERY_ACTIONS)
         has_numeric_pid = bool(re.search(r"\b(?:pid\s*)?(\d{2,7})\b", lower_q)) and ("kill" in lower_q or "process" in lower_q)
+
+        # Scope Analysis: File vs Directory vs System Recycle Bin
+        has_file_target = (
+            bool(re.search(r"\b[\w-]+\.(?:tmp|txt|log|json|csv|py|md|ps1|bak|xml|yml|yaml|ini|cfg)\b", lower_q))
+            or any(w in q_tokens for w in ("file", "temporary", "temp", "notes", "single"))
+        )
+        has_dir_target = any(w in q_tokens for w in ("folder", "directory", "dir", "tree", "subfolder", "subdirectories"))
+        has_recycle_bin = "recycle" in lower_q or ("trash" in lower_q and not has_file_target)
+
+        # Scope Analysis: Ping / ICMP reachability
+        has_icmp_or_ping = any(w in lower_q for w in ("icmp", "ping", "reachability", "packet", "answers icmp"))
+
+        # Scope Analysis: Status checking vs State mutation
+        has_status_query = (
+            any(w in q_tokens for w in ("is", "check", "whether", "status"))
+            and any(w in q_tokens for w in ("running", "open", "active", "alive"))
+        )
+
+        # Scope Analysis: Environment variables
+        has_env = "env" in lower_q or "userprofile" in lower_q or "variable" in lower_q
+
+        # Scope Analysis: Recursive search everywhere
+        has_recurse_search = (
+            any(w in lower_q for w in ("everywhere", "subdirectories", "recursively"))
+            and any(w in lower_q for w in ("search", "find", "locate"))
+        )
 
         scored_pool: List[Tuple[float, str, str]] = []  # (fused_score, intent_id, primary_source)
 
@@ -345,15 +390,16 @@ class IntentEngine:
                         MatchSource.MODEL.value if s_model >= s_fuzzy else MatchSource.FUZZY.value
                     )
 
-            # Intent Constraints & Polarity Filter
+            # --- Intent & Scope Constraints ---
+
             # Constraint 1: STOP vs START polarity
-            if has_stop and not has_start:
+            if has_stop and not has_start and not has_status_query:
                 if "sys_service_start" in intent_id or "proc_start" in intent_id:
                     fused *= 0.20  # Severely suppress start when user requested stop
                 elif "sys_service_stop" in intent_id or "proc_kill" in intent_id:
                     fused += 0.15  # Boost stop intent
 
-            if has_start and not has_stop:
+            if has_start and not has_stop and not has_status_query:
                 if "sys_service_stop" in intent_id or "proc_kill" in intent_id:
                     fused *= 0.20
                 elif "sys_service_start" in intent_id or "proc_start" in intent_id:
@@ -361,7 +407,7 @@ class IntentEngine:
 
             # Constraint 2: COPY / CLONE vs DELETE
             if has_copy and not has_delete:
-                if "file_delete" in intent_id:
+                if "file_delete" in intent_id or "sys_clear_recycle_bin" in intent_id:
                     fused *= 0.10  # Never recommend deletion for a copy/clone command
                 elif "file_copy" in intent_id:
                     fused += 0.20
@@ -379,6 +425,54 @@ class IntentEngine:
                     fused += 0.25
                 elif intent_id == "proc_kill_name":
                     fused *= 0.70
+
+            # Constraint 5: Operation Scope - Single File vs Global Recycle Bin vs Recursive Directory
+            if has_delete:
+                if has_file_target and not has_recycle_bin:
+                    if intent_id == "sys_clear_recycle_bin":
+                        fused *= 0.05  # Wiping recycle bin is NOT deleting a target file!
+                    elif intent_id == "file_delete_single":
+                        fused += 0.35  # Strongly boost deleting the single file
+                    elif intent_id == "file_delete_recursive" and not has_dir_target:
+                        fused *= 0.40
+                elif has_recycle_bin:
+                    if intent_id == "sys_clear_recycle_bin":
+                        fused += 0.30
+                elif has_dir_target:
+                    if intent_id == "file_delete_recursive":
+                        fused += 0.30
+                    elif intent_id == "file_delete_single":
+                        fused *= 0.50
+
+            # Constraint 6: Ping / ICMP Reachability vs Port Scanning
+            if has_icmp_or_ping:
+                if intent_id == "net_ping_host":
+                    fused += 0.35
+                elif intent_id in ("net_test_port", "net_ip_config"):
+                    fused *= 0.50
+
+            # Constraint 7: Status / Liveness Query vs Service Mutation
+            if has_status_query and not has_start and not has_stop:
+                if intent_id == "proc_find":
+                    fused += 0.30
+                elif intent_id in ("sys_service_start", "sys_service_restart"):
+                    fused *= 0.30
+
+            # Constraint 8: Environment Variable Queries & Assignments
+            if has_env:
+                if any(w in lower_q for w in ("set", "export", "assign", "production", "development")):
+                    if intent_id == "env_set_temp":
+                        fused += 0.35
+                elif any(w in lower_q for w in ("what", "check", "read", "value", "is set to")):
+                    if intent_id == "env_get_value":
+                        fused += 0.35
+
+            # Constraint 9: Recursive Search Everywhere
+            if has_recurse_search:
+                if intent_id == "file_find_recurse":
+                    fused += 0.35
+                elif intent_id == "sys_system_info":
+                    fused *= 0.20
 
             scored_pool.append((fused, intent_id, src))
 
@@ -409,6 +503,9 @@ class IntentEngine:
             if not intent:
                 continue
 
+            has_placeholders = bool(re.search(r"<[^>]+>", intent.command))
+            init_complete = (not has_placeholders) and (len(intent.parameter_slots) == 0)
+
             raw_candidates.append(
                 Candidate(
                     command=intent.command,
@@ -420,7 +517,7 @@ class IntentEngine:
                     category=intent.category,
                     risk_reason=intent.risk_reason,
                     command_template=intent.command,
-                    is_complete=len(intent.parameter_slots) == 0,
+                    is_complete=init_complete,
                 )
             )
 
@@ -448,12 +545,14 @@ class IntentEngine:
 
             params, is_complete = extract_parameters_from_query(intent, query)
             cand.parameters = params
-            cand.is_complete = is_complete
 
             rendered = render_command_safely(intent.command, intent, params)
             if rendered:
                 cand.rendered_command = rendered
                 cand.command = rendered
+
+            # Crucial requirement: If any placeholder remains in command, is_complete MUST be False!
+            cand.is_complete = is_complete and not bool(re.search(r"<[^>]+>", cand.command))
 
             # Compute effective risk combining base annotations and scanned command string
             eff_risk, eff_reason = evaluate_command_risk(intent, cand.command)

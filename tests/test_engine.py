@@ -218,3 +218,53 @@ def test_deterministic_sorting(fresh_engine):
     scores1 = [c.score for c in res1.candidates]
     scores2 = [c.score for c in res2.candidates]
     assert scores1 == scores2
+
+
+def test_template_unresolved_placeholder_not_complete(fresh_engine):
+    """P0: Any command template containing unresolved <...> placeholders must NOT be complete."""
+    res = fresh_engine.search("copy files over to another place", mode="hybrid")
+    assert res.is_accepted is True
+    top = res.top_candidate
+    assert "<" in top.command and ">" in top.command
+    assert top.is_complete is False, "Template with unresolved placeholders cannot be complete or directly executable"
+
+
+def test_port_extraction_does_not_split_ip(fresh_engine):
+    """P0: Port extraction must not treat octets of an IPv4 address (e.g. 192) as a port."""
+    res = fresh_engine.search("test if gateway 192.168.1.1 answers icmp packets", mode="hybrid")
+    assert res.is_accepted is True
+    assert res.top_candidate.intent_id == "net_ping_host"
+    assert res.top_candidate.parameters.get("host") == "192.168.1.1"
+
+    # Verify net_test_port did NOT extract 192 as a port
+    for c in res.candidates:
+        if c.intent_id == "net_test_port":
+            assert c.parameters.get("port") != 192
+
+
+def test_trash_single_file_scope_constraint(fresh_engine):
+    """P0: Query targeting a specific file must NEVER recommend Clear-RecycleBin."""
+    res = fresh_engine.search("trash temporary file data.tmp", mode="hybrid")
+    assert res.is_accepted is True
+    assert res.top_candidate.intent_id == "file_delete_single"
+    assert res.top_candidate.intent_id != "sys_clear_recycle_bin"
+    assert res.top_candidate.parameters.get("path") == "data.tmp"
+    assert res.top_candidate.is_complete is True
+
+
+def test_top_candidate_property_isolation(fresh_engine):
+    """P1: top_candidate must return None on OOD / rejection to prevent accidental bypass."""
+    res = fresh_engine.search("how to bake chocolate chip cookies", mode="hybrid")
+    assert res.is_rejected is True
+    assert res.top_candidate is None, "top_candidate must be None when query is rejected"
+    assert res.top_debug_candidate is not None, "top_debug_candidate retains debug candidates"
+
+
+def test_external_tool_product_scope(fresh_engine):
+    """Product Scope: Valid external CLI commands outside the 50 KB must be classified cleanly."""
+    res = fresh_engine.search("git commit -m 'update docs'", mode="hybrid")
+    assert res.is_rejected is True
+    assert res.is_out_of_domain is True
+    assert res.rejection_reason == "unsupported_external_tool"
+    assert res.top_candidate is None
+

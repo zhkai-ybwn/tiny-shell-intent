@@ -25,7 +25,8 @@
       "terminate running program",
       "stop process named node",
       "force quit an application",
-      "end unresponsive process"
+      "end unresponsive process",
+      "stop chrome process"
     ],
     "risk_level": "dangerous",
     "risk_reason": "Forcibly terminates running processes without saving unsaved data or giving cleanup time.",
@@ -127,7 +128,10 @@
       "check if process is running",
       "find process by name",
       "see if chrome is open",
-      "search for process status"
+      "search for process status",
+      "is daemon running",
+      "is my daemon running",
+      "check if service daemon is running"
     ],
     "risk_level": "safe",
     "risk_reason": null,
@@ -203,7 +207,15 @@
     ],
     "risk_level": "safe",
     "risk_reason": null,
-    "parameter_slots": []
+    "parameter_slots": [
+      {
+        "name": "name",
+        "type": "string",
+        "required": true,
+        "placeholder": "<name>",
+        "description": "Process name to wait for"
+      }
+    ]
   },
   {
     "id": "file_list",
@@ -288,11 +300,22 @@
       "find files recursively by extension",
       "search for files in subdirectories",
       "locate all python files in project",
-      "find files matching pattern"
+      "find files matching pattern",
+      "search everywhere for notes",
+      "find all notes recursively",
+      "locate files recursively across subfolders"
     ],
     "risk_level": "safe",
     "risk_reason": null,
-    "parameter_slots": []
+    "parameter_slots": [
+      {
+        "name": "ext",
+        "type": "string",
+        "required": true,
+        "placeholder": "<ext>",
+        "description": "File extension to filter"
+      }
+    ]
   },
   {
     "id": "file_read_head",
@@ -321,7 +344,15 @@
     ],
     "risk_level": "safe",
     "risk_reason": null,
-    "parameter_slots": []
+    "parameter_slots": [
+      {
+        "name": "file",
+        "type": "path",
+        "required": true,
+        "placeholder": "<file>",
+        "description": "File path to read head from"
+      }
+    ]
   },
   {
     "id": "file_read_tail",
@@ -351,7 +382,15 @@
     ],
     "risk_level": "safe",
     "risk_reason": null,
-    "parameter_slots": []
+    "parameter_slots": [
+      {
+        "name": "file",
+        "type": "path",
+        "required": true,
+        "placeholder": "<file>",
+        "description": "File path to read tail from"
+      }
+    ]
   },
   {
     "id": "file_search_text",
@@ -409,13 +448,19 @@
       "erase",
       "rm",
       "del",
-      "file"
+      "file",
+      "trash",
+      "temp"
     ],
     "intent_phrases": [
       "delete a file",
       "remove specific file",
       "erase single file from disk",
-      "clean up one file"
+      "clean up one file",
+      "trash file",
+      "trash temporary file",
+      "discard file",
+      "delete temp file"
     ],
     "risk_level": "warning",
     "risk_reason": "Permanently deletes the specified file bypassing the Recycle Bin.",
@@ -495,7 +540,22 @@
     ],
     "risk_level": "safe",
     "risk_reason": null,
-    "parameter_slots": []
+    "parameter_slots": [
+      {
+        "name": "source",
+        "type": "path",
+        "required": true,
+        "placeholder": "<source>",
+        "description": "Source file or folder path"
+      },
+      {
+        "name": "dest",
+        "type": "path",
+        "required": true,
+        "placeholder": "<dest>",
+        "description": "Destination file or folder path"
+      }
+    ]
   },
   {
     "id": "file_move",
@@ -523,7 +583,22 @@
     ],
     "risk_level": "warning",
     "risk_reason": "Overwrites existing files at destination if forced, and changes file paths.",
-    "parameter_slots": []
+    "parameter_slots": [
+      {
+        "name": "source",
+        "type": "path",
+        "required": true,
+        "placeholder": "<source>",
+        "description": "Source file or folder path"
+      },
+      {
+        "name": "dest",
+        "type": "path",
+        "required": true,
+        "placeholder": "<dest>",
+        "description": "Destination file or folder path"
+      }
+    ]
   },
   {
     "id": "file_new_directory",
@@ -550,7 +625,15 @@
     ],
     "risk_level": "safe",
     "risk_reason": null,
-    "parameter_slots": []
+    "parameter_slots": [
+      {
+        "name": "folder",
+        "type": "path",
+        "required": true,
+        "placeholder": "<folder>",
+        "description": "Directory path to create"
+      }
+    ]
   },
   {
     "id": "file_new_empty_file",
@@ -577,7 +660,15 @@
     ],
     "risk_level": "safe",
     "risk_reason": null,
-    "parameter_slots": []
+    "parameter_slots": [
+      {
+        "name": "filename",
+        "type": "path",
+        "required": true,
+        "placeholder": "<filename>",
+        "description": "File path to create"
+      }
+    ]
   },
   {
     "id": "file_test_exists",
@@ -605,7 +696,15 @@
     ],
     "risk_level": "safe",
     "risk_reason": null,
-    "parameter_slots": []
+    "parameter_slots": [
+      {
+        "name": "path",
+        "type": "path",
+        "required": true,
+        "placeholder": "<path>",
+        "description": "Path to test existence"
+      }
+    ]
   },
   {
     "id": "file_count_lines",
@@ -633,7 +732,15 @@
     ],
     "risk_level": "safe",
     "risk_reason": null,
-    "parameter_slots": []
+    "parameter_slots": [
+      {
+        "name": "file",
+        "type": "path",
+        "required": true,
+        "placeholder": "<file>",
+        "description": "File path to count lines"
+      }
+    ]
   },
   {
     "id": "file_checksum_sha256",
@@ -662,7 +769,15 @@
     ],
     "risk_level": "safe",
     "risk_reason": null,
-    "parameter_slots": []
+    "parameter_slots": [
+      {
+        "name": "file",
+        "type": "path",
+        "required": true,
+        "placeholder": "<file>",
+        "description": "File path for SHA256 calculation"
+      }
+    ]
   },
   {
     "id": "file_print_working_dir",
@@ -753,13 +868,19 @@
       "latency",
       "reachability",
       "host",
-      "online"
+      "online",
+      "gateway",
+      "packets",
+      "packet"
     ],
     "intent_phrases": [
       "ping a remote host",
       "check if server is reachable by ping",
       "test network latency to google",
-      "verify internet connectivity"
+      "verify internet connectivity",
+      "test if gateway answers icmp packets",
+      "ping gateway ip",
+      "check icmp ping reachability"
     ],
     "risk_level": "safe",
     "risk_reason": null,
@@ -830,7 +951,15 @@
     ],
     "risk_level": "safe",
     "risk_reason": null,
-    "parameter_slots": []
+    "parameter_slots": [
+      {
+        "name": "url",
+        "type": "string",
+        "required": true,
+        "placeholder": "<url>",
+        "description": "HTTP REST API URL"
+      }
+    ]
   },
   {
     "id": "net_download_file",
@@ -860,7 +989,22 @@
     ],
     "risk_level": "safe",
     "risk_reason": null,
-    "parameter_slots": []
+    "parameter_slots": [
+      {
+        "name": "url",
+        "type": "string",
+        "required": true,
+        "placeholder": "<url>",
+        "description": "Download source URL"
+      },
+      {
+        "name": "destination",
+        "type": "path",
+        "required": true,
+        "placeholder": "<destination>",
+        "description": "Destination file path"
+      }
+    ]
   },
   {
     "id": "net_ip_config",
@@ -919,7 +1063,15 @@
     ],
     "risk_level": "safe",
     "risk_reason": null,
-    "parameter_slots": []
+    "parameter_slots": [
+      {
+        "name": "domain",
+        "type": "hostname",
+        "required": true,
+        "placeholder": "<domain>",
+        "description": "Domain name to resolve"
+      }
+    ]
   },
   {
     "id": "net_flush_dns",
@@ -975,7 +1127,15 @@
     ],
     "risk_level": "safe",
     "risk_reason": null,
-    "parameter_slots": []
+    "parameter_slots": [
+      {
+        "name": "host",
+        "type": "hostname",
+        "required": true,
+        "placeholder": "<host>",
+        "description": "Target hostname or IP for traceroute"
+      }
+    ]
   },
   {
     "id": "sys_service_list",
@@ -1328,11 +1488,21 @@
       "read value of environment variable",
       "print specific env variable",
       "check value of env var",
-      "echo environment setting"
+      "echo environment setting",
+      "check what env variable is set to",
+      "what variable is set to"
     ],
     "risk_level": "safe",
     "risk_reason": null,
-    "parameter_slots": []
+    "parameter_slots": [
+      {
+        "name": "variable_name",
+        "type": "string",
+        "required": true,
+        "placeholder": "<VARIABLE_NAME>",
+        "description": "Environment variable name"
+      }
+    ]
   },
   {
     "id": "env_set_temp",
@@ -1360,7 +1530,22 @@
     ],
     "risk_level": "warning",
     "risk_reason": "Changes environment variables in current session, which affects child processes.",
-    "parameter_slots": []
+    "parameter_slots": [
+      {
+        "name": "variable_name",
+        "type": "string",
+        "required": true,
+        "placeholder": "<VARIABLE_NAME>",
+        "description": "Environment variable name"
+      },
+      {
+        "name": "value",
+        "type": "string",
+        "required": true,
+        "placeholder": "<value>",
+        "description": "Variable value"
+      }
+    ]
   },
   {
     "id": "env_path_inspect",
@@ -1443,7 +1628,22 @@
     ],
     "risk_level": "safe",
     "risk_reason": null,
-    "parameter_slots": []
+    "parameter_slots": [
+      {
+        "name": "source",
+        "type": "path",
+        "required": true,
+        "placeholder": "<source>",
+        "description": "Source path to archive"
+      },
+      {
+        "name": "archive",
+        "type": "path",
+        "required": true,
+        "placeholder": "<archive.zip>",
+        "description": "Destination zip file path"
+      }
+    ]
   },
   {
     "id": "arch_unzip_file",
@@ -1471,7 +1671,22 @@
     ],
     "risk_level": "safe",
     "risk_reason": null,
-    "parameter_slots": []
+    "parameter_slots": [
+      {
+        "name": "archive",
+        "type": "path",
+        "required": true,
+        "placeholder": "<archive.zip>",
+        "description": "Zip archive to extract"
+      },
+      {
+        "name": "destination",
+        "type": "path",
+        "required": true,
+        "placeholder": "<destination>",
+        "description": "Destination directory"
+      }
+    ]
   },
   {
     "id": "sys_clear_screen",

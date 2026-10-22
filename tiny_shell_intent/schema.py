@@ -144,6 +144,10 @@ class QueryResult:
 
     @property
     def top_candidate(self) -> Optional[Candidate]:
-        if self.candidates:
-            return self.candidates[0]
+        """Return the top actionable accepted candidate, or None if rejected / empty."""
+        return self.candidates[0] if self.candidates else None
+
+    @property
+    def top_debug_candidate(self) -> Optional[Candidate]:
+        """Return the top candidate from debug candidates (for inspection when rejected)."""
         return self.debug_candidates[0] if self.debug_candidates else None
