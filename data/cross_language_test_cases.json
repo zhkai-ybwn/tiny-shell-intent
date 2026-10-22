@@ -1894,6 +1894,97 @@
       "debug_candidates": []
     },
     {
+      "query": "ll",
+      "mode": "hybrid",
+      "is_accepted": true,
+      "is_rejected": false,
+      "is_out_of_domain": false,
+      "is_empty": false,
+      "rejection_reason": null,
+      "top_intent_id": "file_list",
+      "candidates": [
+        {
+          "intent_id": "file_list",
+          "command": "Get-ChildItem -Path .",
+          "rendered_command": "Get-ChildItem -Path .",
+          "score": 1.0,
+          "source": "rule_exact",
+          "risk_level": "safe",
+          "is_complete": true,
+          "parameters": {}
+        }
+      ],
+      "debug_candidates": []
+    },
+    {
+      "query": "git s",
+      "mode": "hybrid",
+      "is_accepted": true,
+      "is_rejected": false,
+      "is_out_of_domain": false,
+      "is_empty": false,
+      "rejection_reason": null,
+      "top_intent_id": "git_status",
+      "candidates": [
+        {
+          "intent_id": "git_status",
+          "command": "git status",
+          "rendered_command": "git status",
+          "score": 1.0,
+          "source": "rule_exact",
+          "risk_level": "safe",
+          "is_complete": true,
+          "parameters": {}
+        }
+      ],
+      "debug_candidates": []
+    },
+    {
+      "query": "find process using port 8080",
+      "mode": "hybrid",
+      "is_accepted": true,
+      "is_rejected": false,
+      "is_out_of_domain": false,
+      "is_empty": false,
+      "rejection_reason": null,
+      "top_intent_id": "net_listening_ports",
+      "candidates": [
+        {
+          "intent_id": "net_listening_ports",
+          "command": "Get-NetTCPConnection -LocalPort 8080 -State Listen | Select-Object LocalAddress, LocalPort, OwningProcess",
+          "rendered_command": "Get-NetTCPConnection -LocalPort 8080 -State Listen | Select-Object LocalAddress, LocalPort, OwningProcess",
+          "score": 1.32,
+          "source": "fuzzy",
+          "risk_level": "safe",
+          "is_complete": true,
+          "parameters": {
+            "port": 8080
+          }
+        },
+        {
+          "intent_id": "file_find_recurse",
+          "command": "Get-ChildItem -Recurse -Filter \"*.<ext>\"",
+          "rendered_command": null,
+          "score": 0.54,
+          "source": "fuzzy",
+          "risk_level": "safe",
+          "is_complete": false,
+          "parameters": {}
+        },
+        {
+          "intent_id": "proc_list",
+          "command": "Get-Process | Sort-Object CPU -Descending | Select-Object -First 10",
+          "rendered_command": "Get-Process | Sort-Object CPU -Descending | Select-Object -First 10",
+          "score": 0.421,
+          "source": "fuzzy",
+          "risk_level": "safe",
+          "is_complete": true,
+          "parameters": {}
+        }
+      ],
+      "debug_candidates": []
+    },
+    {
       "query": "test port 8080 on localhost",
       "mode": "hybrid",
       "is_accepted": true,
@@ -1907,7 +1998,7 @@
           "intent_id": "net_test_port",
           "command": "Test-NetConnection -ComputerName localhost -Port 8080",
           "rendered_command": "Test-NetConnection -ComputerName localhost -Port 8080",
-          "score": 0.6176,
+          "score": 0.9676,
           "source": "model",
           "risk_level": "safe",
           "is_complete": true,
@@ -1927,13 +2018,13 @@
           "parameters": {}
         },
         {
-          "intent_id": "sys_uptime",
-          "command": "(Get-Uptime).TotalHours",
-          "rendered_command": "(Get-Uptime).TotalHours",
-          "score": 0.3538,
+          "intent_id": "proc_kill_name",
+          "command": "Stop-Process -Name \"<name>\" -Force",
+          "rendered_command": null,
+          "score": 0.3339,
           "source": "fuzzy",
-          "risk_level": "safe",
-          "is_complete": true,
+          "risk_level": "dangerous",
+          "is_complete": false,
           "parameters": {}
         }
       ],
@@ -1963,12 +2054,12 @@
         },
         {
           "intent_id": "net_listening_ports",
-          "command": "Get-NetTCPConnection -State Listen | Select-Object LocalAddress, LocalPort, OwningProcess",
-          "rendered_command": "Get-NetTCPConnection -State Listen | Select-Object LocalAddress, LocalPort, OwningProcess",
+          "command": "Get-NetTCPConnection -LocalPort <port> -State Listen | Select-Object LocalAddress, LocalPort, OwningProcess",
+          "rendered_command": null,
           "score": 0.3818,
           "source": "model",
           "risk_level": "safe",
-          "is_complete": true,
+          "is_complete": false,
           "parameters": {}
         },
         {
@@ -2017,13 +2108,13 @@
           "parameters": {}
         },
         {
-          "intent_id": "sys_shutdown_machine",
-          "command": "Stop-Computer -Force",
-          "rendered_command": "Stop-Computer -Force",
-          "score": 0.4865,
-          "source": "fuzzy",
-          "risk_level": "dangerous",
-          "is_complete": true,
+          "intent_id": "net_listening_ports",
+          "command": "Get-NetTCPConnection -LocalPort <port> -State Listen | Select-Object LocalAddress, LocalPort, OwningProcess",
+          "rendered_command": null,
+          "score": 0.5044,
+          "source": "model",
+          "risk_level": "safe",
+          "is_complete": false,
           "parameters": {}
         }
       ],
@@ -2052,22 +2143,22 @@
           }
         },
         {
+          "intent_id": "file_list",
+          "command": "Get-ChildItem -Path .",
+          "rendered_command": "Get-ChildItem -Path .",
+          "score": 0.54,
+          "source": "fuzzy",
+          "risk_level": "safe",
+          "is_complete": true,
+          "parameters": {}
+        },
+        {
           "intent_id": "proc_kill_id",
           "command": "Stop-Process -Id <pid> -Force",
           "rendered_command": null,
           "score": 0.4989,
           "source": "fuzzy",
           "risk_level": "dangerous",
-          "is_complete": false,
-          "parameters": {}
-        },
-        {
-          "intent_id": "proc_find",
-          "command": "Get-Process -Name \"<name>\"",
-          "rendered_command": null,
-          "score": 0.3754,
-          "source": "model",
-          "risk_level": "safe",
           "is_complete": false,
           "parameters": {}
         }
@@ -2133,7 +2224,7 @@
           "intent_id": "proc_start",
           "command": "Start-Process 'notepad'",
           "rendered_command": "Start-Process 'notepad'",
-          "score": 0.7805,
+          "score": 0.69,
           "source": "fuzzy",
           "risk_level": "safe",
           "is_complete": true,
@@ -2241,7 +2332,7 @@
           "intent_id": "file_list",
           "command": "Get-ChildItem -Path .",
           "rendered_command": "Get-ChildItem -Path .",
-          "score": 0.4761,
+          "score": 0.4808,
           "source": "model",
           "risk_level": "safe",
           "is_complete": true,
@@ -2389,26 +2480,7 @@
       "rejection_reason": "low_semantic_confidence_out_of_domain",
       "top_intent_id": null,
       "candidates": [],
-      "debug_candidates": [
-        {
-          "intent_id": "net_dns_resolve",
-          "command": "Resolve-DnsName -Name \"<domain>\"",
-          "score": 0.3625,
-          "source": "fuzzy"
-        },
-        {
-          "intent_id": "proc_list",
-          "command": "Get-Process | Sort-Object CPU -Descending | Select-Object -First 10",
-          "score": 0.2906,
-          "source": "fuzzy"
-        },
-        {
-          "intent_id": "sys_system_info",
-          "command": "Get-ComputerInfo | Select-Object WindowsProductName, OsHardwareAbstractionLayer, TotalPhysicalMemory",
-          "score": 0.2896,
-          "source": "fuzzy"
-        }
-      ]
+      "debug_candidates": []
     },
     {
       "query": "git commit -m update docs",

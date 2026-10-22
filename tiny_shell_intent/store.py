@@ -64,7 +64,10 @@ class KnowledgeBaseStore:
 
             # Index primary command verb or binary
             cmd_lower = intent.command.strip().lower()
-            verb = cmd_lower.split()[0] if cmd_lower else ""
+            if cmd_lower.startswith("git "):
+                verb = "git status"
+            else:
+                verb = cmd_lower.split()[0] if cmd_lower else ""
             if verb:
                 v_list = self._command_to_intent_ids.setdefault(verb, [])
                 if intent.id not in v_list:

@@ -156,11 +156,12 @@ public static class ParameterExtractor
 
         var (maskedQ, _) = MaskStructuredEntities(cleanQ);
 
-        // 1. net_test_port
-        if (intent.Id == "net_test_port")
+        // 1. net_test_port & net_listening_ports
+        if (intent.Id is "net_test_port" or "net_listening_ports")
         {
             var portMatch = Regex.Match(maskedQ, @"\bport\s*[:=]?\s*(\d{1,5})\b", RegexOptions.IgnoreCase);
             if (!portMatch.Success) portMatch = Regex.Match(maskedQ, @"\bon\s+port\s+(\d{1,5})\b", RegexOptions.IgnoreCase);
+            if (!portMatch.Success) portMatch = Regex.Match(maskedQ, @"\busing\s+port\s+(\d{1,5})\b", RegexOptions.IgnoreCase);
             if (!portMatch.Success) portMatch = Regex.Match(maskedQ, @"\b(\d{1,5})\s*/(?:tcp|udp)\b", RegexOptions.IgnoreCase);
             if (!portMatch.Success) portMatch = Regex.Match(maskedQ, @"(?<![\.\d]):(\d{1,5})\b");
 
@@ -169,21 +170,24 @@ public static class ParameterExtractor
                 extracted["port"] = portMatch.Groups[1].Value;
             }
 
-            var ipM = Ipv4Regex.Match(cleanQ);
-            if (ipM.Success)
+            if (intent.Id == "net_test_port")
             {
-                extracted["host"] = ipM.Value;
-            }
-            else if (Regex.IsMatch(cleanQ, @"\blocalhost\b", RegexOptions.IgnoreCase))
-            {
-                extracted["host"] = "localhost";
-            }
-            else
-            {
-                var hostM = Regex.Match(cleanQ, @"\b(?:on|to|host|server|at)\s+([a-zA-Z0-9.-]+)\b", RegexOptions.IgnoreCase);
-                if (hostM.Success && !int.TryParse(hostM.Groups[1].Value, out _))
+                var ipM = Ipv4Regex.Match(cleanQ);
+                if (ipM.Success)
                 {
-                    extracted["host"] = hostM.Groups[1].Value;
+                    extracted["host"] = ipM.Value;
+                }
+                else if (Regex.IsMatch(cleanQ, @"\blocalhost\b", RegexOptions.IgnoreCase))
+                {
+                    extracted["host"] = "localhost";
+                }
+                else
+                {
+                    var hostM = Regex.Match(cleanQ, @"\b(?:on|to|host|server|at)\s+([a-zA-Z0-9.-]+)\b", RegexOptions.IgnoreCase);
+                    if (hostM.Success && !int.TryParse(hostM.Groups[1].Value, out _))
+                    {
+                        extracted["host"] = hostM.Groups[1].Value;
+                    }
                 }
             }
         }

@@ -230,3 +230,8 @@ TestResults/
 modules/TinyShell/*.dll
 modules/TinyShell/data/
 modules/TinyShell/models/
+
+
+# Dev-machine SDK conflict resolution bypass files (prevent repository pollution)
+Directory.Build.props
+Directory.Build.targets

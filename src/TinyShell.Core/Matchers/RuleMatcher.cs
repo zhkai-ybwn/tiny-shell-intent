@@ -146,6 +146,7 @@ public sealed class RuleMatcher : IMatcher
             // Try matching first token against command primary verbs
             foreach (var it in _store.AllIntents)
             {
+                if (it.Command.StartsWith("git ", StringComparison.OrdinalIgnoreCase)) continue;
                 string cmdVerb = it.Command.Trim().ToLowerInvariant().Split(' ')[0];
                 if (cmdVerb.Equals(firstWord, StringComparison.OrdinalIgnoreCase))
                 {

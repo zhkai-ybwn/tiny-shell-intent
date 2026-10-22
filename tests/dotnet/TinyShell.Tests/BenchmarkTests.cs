@@ -81,6 +81,6 @@ public class BenchmarkTests
         _output.WriteLine($"Uncached P50: {p50:F3} ms, P95: {p95:F3} ms");
 
         // Verification: hot search latency budget is <= 10 ms
-        Assert.True(p95 <= 15.0, $"Uncached P95 latency {p95:F3} ms exceeded tolerance (target <= 10ms)");
+        Assert.True(p95 <= 10.0, $"Uncached P95 latency {p95:F3} ms exceeded strict budget (target <= 10.0 ms)");
     }
 }

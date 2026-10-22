@@ -229,6 +229,7 @@
     "category": "filesystem",
     "command": "Get-ChildItem -Path .",
     "aliases": [
+      "ll",
       "ls",
       "dir",
       "gci",
@@ -242,13 +243,16 @@
       "dir",
       "ls",
       "contents",
-      "folder"
+      "folder",
+      "ll"
     ],
     "intent_phrases": [
+      "ll",
       "list files in current directory",
       "show directory contents",
       "see files in folder",
-      "view folder items"
+      "view folder items",
+      "list directory contents detailed"
     ],
     "risk_level": "safe",
     "risk_reason": null,
@@ -904,7 +908,7 @@
   {
     "id": "net_listening_ports",
     "category": "network",
-    "command": "Get-NetTCPConnection -State Listen | Select-Object LocalAddress, LocalPort, OwningProcess",
+    "command": "Get-NetTCPConnection -LocalPort <port> -State Listen | Select-Object LocalAddress, LocalPort, OwningProcess",
     "aliases": [
       "netstat -ano",
       "ss -lntp",
@@ -918,17 +922,34 @@
       "netstat",
       "open ports",
       "tcp",
-      "bind"
+      "bind",
+      "process",
+      "using",
+      "occupying",
+      "who"
     ],
     "intent_phrases": [
       "list all listening ports on machine",
       "find which process is using port 3000",
       "show open listening tcp sockets",
-      "see active listening network ports"
+      "see active listening network ports",
+      "find process using port",
+      "find process using port 8080",
+      "who is using port",
+      "which process is occupying port",
+      "check process listening on port"
     ],
     "risk_level": "safe",
     "risk_reason": null,
-    "parameter_slots": []
+    "parameter_slots": [
+      {
+        "name": "port",
+        "type": "int",
+        "required": false,
+        "placeholder": "<port>",
+        "description": "Optional local listening port number to filter by"
+      }
+    ]
   },
   {
     "id": "net_http_get_json",
@@ -1744,6 +1765,37 @@
       "view previously executed commands",
       "see past entered commands",
       "get terminal command log"
+    ],
+    "risk_level": "safe",
+    "risk_reason": null,
+    "parameter_slots": []
+  },
+  {
+    "id": "git_status",
+    "category": "vcs",
+    "command": "git status",
+    "aliases": [
+      "git s",
+      "gs",
+      "git status",
+      "git st"
+    ],
+    "description": "Show the working tree status of current git repository.",
+    "keywords": [
+      "git",
+      "status",
+      "git s",
+      "repo",
+      "branch",
+      "changes",
+      "working tree"
+    ],
+    "intent_phrases": [
+      "git status",
+      "check git repo status",
+      "see git branch changes",
+      "show working tree status",
+      "check repository status"
     ],
     "risk_level": "safe",
     "risk_reason": null,

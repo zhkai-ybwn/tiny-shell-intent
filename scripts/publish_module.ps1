@@ -4,8 +4,31 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 $moduleDir = Join-Path $repoRoot "modules\TinyShell"
 
-Write-Host "Building TinyShell in Release configuration..." -ForegroundColor Cyan
-& "C:\Users\user\.dotnet\dotnet.exe" build (Join-Path $repoRoot "src\TinyShell.PowerShell\TinyShell.PowerShell.csproj") -c Release
+function Get-DotNetSdkCommand {
+    $candidates = @()
+    $userDotnet = Join-Path $env:USERPROFILE ".dotnet\dotnet.exe"
+    if (Test-Path $userDotnet) { $candidates += $userDotnet }
+
+    $pathDotnet = (Get-Command dotnet -ErrorAction SilentlyContinue)?.Source
+    if ($pathDotnet -and -not ($candidates -contains $pathDotnet)) { $candidates += $pathDotnet }
+
+    $pfDotnet = "C:\Program Files\dotnet\dotnet.exe"
+    if ((Test-Path $pfDotnet) -and -not ($candidates -contains $pfDotnet)) { $candidates += $pfDotnet }
+
+    foreach ($cmd in $candidates) {
+        try {
+            $sdks = & $cmd --list-sdks 2>$null
+            if ($sdks -and ($sdks -match '\d+\.\d+')) {
+                return $cmd
+            }
+        } catch { }
+    }
+    throw "No working .NET SDK command found. Please ensure .NET SDK 8.0+ is installed."
+}
+
+$dotnetCmd = Get-DotNetSdkCommand
+Write-Host "Building TinyShell in Release configuration using $dotnetCmd..." -ForegroundColor Cyan
+& $dotnetCmd build (Join-Path $repoRoot "src\TinyShell.PowerShell\TinyShell.PowerShell.csproj") -c Release
 
 $releaseBin = Join-Path $repoRoot "src\TinyShell.PowerShell\bin\Release\net8.0"
 

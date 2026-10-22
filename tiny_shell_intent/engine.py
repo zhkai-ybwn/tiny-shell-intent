@@ -444,12 +444,29 @@ class IntentEngine:
                     elif intent_id == "file_delete_single":
                         fused *= 0.50
 
-            # Constraint 6: Ping / ICMP Reachability vs Port Scanning
+            # Constraint 6: Ping / ICMP Reachability vs Listening Ports vs Port Scanning
             if has_icmp_or_ping:
                 if intent_id == "net_ping_host":
                     fused += 0.35
                 elif intent_id in ("net_test_port", "net_ip_config"):
                     fused *= 0.50
+
+            has_listening_query = "port" in lower_q and (
+                any(w in q_tokens for w in ("process", "using", "listening", "occupying", "who", "what", "which", "pid"))
+                or "running on" in lower_q
+            )
+            has_test_conn_query = any(w in q_tokens for w in ("test", "connect", "reach", "remote", "ping", "server", "gateway"))
+
+            if has_listening_query and not has_test_conn_query:
+                if intent_id == "net_listening_ports":
+                    fused += 0.45
+                elif intent_id == "net_test_port":
+                    fused *= 0.30
+            elif has_test_conn_query and "port" in lower_q:
+                if intent_id == "net_test_port":
+                    fused += 0.35
+                elif intent_id == "net_listening_ports":
+                    fused *= 0.40
 
             # Constraint 7: Status / Liveness Query vs Service Mutation
             if has_status_query and not has_start and not has_stop:

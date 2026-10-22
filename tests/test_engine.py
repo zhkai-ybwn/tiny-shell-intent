@@ -268,3 +268,32 @@ def test_external_tool_product_scope(fresh_engine):
     assert res.rejection_reason == "unsupported_external_tool"
     assert res.top_candidate is None
 
+
+
+def test_ll_intent_resolution(fresh_engine):
+    """P0: Core alias 'll' must resolve deterministically to file_list."""
+    res = fresh_engine.search("ll", mode="hybrid")
+    assert res.is_accepted is True
+    assert res.top_candidate.intent_id == "file_list"
+    assert res.top_candidate.command == "Get-ChildItem -Path ."
+    assert res.top_candidate.source == "rule_exact"
+    assert res.top_candidate.score == 1.0
+
+
+def test_git_s_developer_intent(fresh_engine):
+    """P1: 'git s' must resolve cleanly to git status without being rejected as an unsupported tool."""
+    res = fresh_engine.search("git s", mode="hybrid")
+    assert res.is_accepted is True
+    assert res.top_candidate.intent_id == "git_status"
+    assert res.top_candidate.command == "git status"
+    assert res.top_candidate.source == "rule_exact"
+
+
+def test_listening_port_query_resolution(fresh_engine):
+    """P1: 'find process using port 8080' must recommend net_listening_ports, NOT remote net_test_port."""
+    res = fresh_engine.search("find process using port 8080", mode="hybrid")
+    assert res.is_accepted is True
+    assert res.top_candidate.intent_id == "net_listening_ports"
+    assert "8080" in res.top_candidate.command
+    assert res.top_candidate.parameters.get("port") == 8080
+    assert res.top_candidate.is_complete is True

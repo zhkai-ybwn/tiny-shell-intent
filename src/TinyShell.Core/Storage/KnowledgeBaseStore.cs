@@ -36,8 +36,12 @@ public sealed class KnowledgeBaseStore
             _intentsById[intent.Id] = intent;
             _allIntents.Add(intent);
 
-            // Index command primary name if available
-            string primaryCmd = intent.Command.Split(' ')[0];
+            // Index command primary name if available (avoid indexing multi-word CLI tool roots like 'git')
+            string primaryCmd = intent.Command.Trim();
+            if (!primaryCmd.StartsWith("git ", StringComparison.OrdinalIgnoreCase))
+            {
+                primaryCmd = primaryCmd.Split(' ')[0];
+            }
             AddAliasMapping(primaryCmd, intent.Id);
 
             // Index all configured aliases

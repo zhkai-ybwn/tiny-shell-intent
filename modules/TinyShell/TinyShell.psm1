@@ -1,5 +1,5 @@
 # TinyShell PowerShell Module
-# Offline semantic intent recommendation plugin for PowerShell 7
+# Offline semantic intent recommendation plugin for PowerShell 7.4+
 
 $moduleRoot = $PSScriptRoot
 
@@ -32,29 +32,49 @@ if (Test-Path $modelDir) {
     [TinyShell.PowerShell.TinyShellSession]::DefaultModelPath = (Resolve-Path $modelDir).Path
 }
 
+# Script-scoped state
+$script:TinyShellMode = 'hybrid'
+$script:TinyShellChord = 'Alt+s'
+
 <#
 .SYNOPSIS
     Registers an interactive PSReadLine key handler for TinyShell command suggestions.
 .PARAMETER Chord
-    Key combination to trigger suggestion menu. Default is 'Ctrl+i'.
+    Key combination to trigger suggestion menu. Default is 'Alt+s' (avoids Tab / Ctrl+I collision).
 .PARAMETER Mode
     Retrieval mode: 'hybrid', 'rule', 'fuzzy', 'model'. Default is 'hybrid'.
+.PARAMETER Force
+    Force binding even if the chord is already bound to another PSReadLine function.
 #>
 function Register-TinyIntentKeyHandler {
     [CmdletBinding()]
     param(
         [Parameter()]
-        [string]$Chord = 'Ctrl+i',
+        [string]$Chord = 'Alt+s',
 
         [Parameter()]
         [ValidateSet('hybrid', 'rule', 'fuzzy', 'model')]
-        [string]$Mode = 'hybrid'
+        [string]$Mode = 'hybrid',
+
+        [Parameter()]
+        [switch]$Force
     )
 
     if (-not (Get-Module -Name 'PSReadLine')) {
         Write-Warning "PSReadLine module is not loaded. Interactive key handler requires PSReadLine."
         return
     }
+
+    # Detect conflicts with existing key bindings
+    $existingBinding = Get-PSReadLineKeyHandler -Bound | Where-Object { $_.Key -eq $Chord }
+    if ($existingBinding -and -not $Force) {
+        Write-Warning "[TinyShell] Key chord '$Chord' is already bound to function '$($existingBinding.Function)'. Pass -Force to override or select another chord with -Chord."
+        return
+    }
+
+    # Persist configuration in module-scope variables
+    $script:TinyShellMode = $Mode
+    $script:TinyShellChord = $Chord
 
     Set-PSReadLineKeyHandler -Chord $Chord -BriefDescription "TinyShell Semantic Suggestion" -LongDescription "Suggests PowerShell commands using offline semantic intent matching." -ScriptBlock {
         param($key, $arg)
@@ -68,17 +88,20 @@ function Register-TinyIntentKeyHandler {
         }
 
         $cleanLine = $line.Trim()
-        $tokens = $cleanLine.Split()
+        $tokens = $cleanLine -split '\s+'
         $firstToken = if ($tokens.Count -gt 0) { $tokens[0] } else { "" }
 
         # Check if the command is already a valid command or alias in the current shell
         $existingCmd = $null
-        if ($tokens.Count -eq 1) {
+        if ($firstToken) {
             $existingCmd = Get-Command -Name $firstToken -ErrorAction SilentlyContinue
         }
 
+        # Retrieve mode from persistent module scope
+        $currentMode = if ($script:TinyShellMode) { $script:TinyShellMode } else { 'hybrid' }
+
         # Query IntentEngine
-        $res = Get-TinyIntent -Query $cleanLine -Top 3 -Mode $Mode
+        $res = Get-TinyIntent -Query $cleanLine -Top 3 -Mode $currentMode
 
         if (-not $res.IsAccepted -or $res.Candidates.Count -eq 0) {
             Write-Host "`n[TinyShell] No matching intent recognized ($($res.RejectionReason))." -ForegroundColor DarkGray
@@ -93,7 +116,7 @@ function Register-TinyIntentKeyHandler {
 
         if ($existingCmd) {
             Write-Host " │ " -NoNewline -ForegroundColor Cyan
-            Write-Host "ℹ Note: '$firstToken' is already a valid $($existingCmd.CommandType) in your session." -ForegroundColor Yellow
+            Write-Host "ℹ Note: '$firstToken' is an existing $($existingCmd.CommandType) in your session." -ForegroundColor Yellow
         }
 
         $idx = 1
@@ -123,6 +146,11 @@ function Register-TinyIntentKeyHandler {
         }
         Write-Host "╰──────────────────────────────────────────────────────────────────────────" -ForegroundColor Cyan
 
+        if ([Console]::IsInputRedirected) {
+            [Microsoft.PowerShell.PSConsoleReadLine]::Repaint()
+            return
+        }
+
         # User choice: 1, 2, 3 or Esc/Enter to cancel
         Write-Host "Select [1-$($res.Candidates.Count)], or [Esc/Enter] keep original: " -NoNewline -ForegroundColor Cyan
         $keyPress = [Console]::ReadKey($true)
@@ -148,20 +176,20 @@ function Register-TinyIntentKeyHandler {
         }
     }
 
-    Write-Host "[TinyShell] Key handler registered for chord: '$Chord'" -ForegroundColor Cyan
+    Write-Host "[TinyShell] Key handler registered for chord: '$Chord' (Mode: $Mode)" -ForegroundColor Cyan
 }
 
 <#
 .SYNOPSIS
     Unregisters the TinyShell PSReadLine key handler.
 .PARAMETER Chord
-    Key combination to unregister. Default is 'Ctrl+i'.
+    Key combination to unregister. Default is the currently registered chord.
 #>
 function Unregister-TinyIntentKeyHandler {
     [CmdletBinding()]
     param(
         [Parameter()]
-        [string]$Chord = 'Ctrl+i'
+        [string]$Chord = $script:TinyShellChord
     )
 
     if (Get-Module -Name 'PSReadLine') {
@@ -170,4 +198,64 @@ function Unregister-TinyIntentKeyHandler {
     }
 }
 
-Export-ModuleMember -Cmdlet Get-TinyIntent, Initialize-TinyIntent -Function Register-TinyIntentKeyHandler, Unregister-TinyIntentKeyHandler
+<#
+.SYNOPSIS
+    Simulates buffer suggestion and replacement for testing without physical keyboard hardware.
+.PARAMETER Buffer
+    Simulated command line input buffer.
+.PARAMETER Selection
+    Selected candidate index (1, 2, 3), or 0 / $null to cancel.
+.PARAMETER Mode
+    Retrieval mode ('hybrid', 'rule', 'fuzzy', 'model').
+#>
+function Invoke-TinyShellBufferSimulation {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Buffer,
+
+        [Parameter()]
+        [int]$Selection = 1,
+
+        [Parameter()]
+        [string]$Mode = 'hybrid'
+    )
+
+    $cleanLine = $Buffer.Trim()
+    if ([string]::IsNullOrWhiteSpace($cleanLine)) {
+        return [PSCustomObject]@{
+            OriginalBuffer = $Buffer
+            ReplacedBuffer = $Buffer
+            IsReplaced = $false
+            Candidates = @()
+        }
+    }
+
+    $res = Get-TinyIntent -Query $cleanLine -Top 3 -Mode $Mode
+    if (-not $res.IsAccepted -or $res.Candidates.Count -eq 0) {
+        return [PSCustomObject]@{
+            OriginalBuffer = $Buffer
+            ReplacedBuffer = $Buffer
+            IsReplaced = $false
+            RejectionReason = $res.RejectionReason
+            Candidates = @()
+        }
+    }
+
+    $selectedCmd = $null
+    if ($Selection -ge 1 -and $Selection -le $res.Candidates.Count) {
+        $cand = $res.Candidates[$Selection - 1]
+        $selectedCmd = if ($cand.RenderedCommand) { $cand.RenderedCommand } else { $cand.Command }
+    }
+
+    return [PSCustomObject]@{
+        OriginalBuffer = $Buffer
+        ReplacedBuffer = if ($selectedCmd) { $selectedCmd } else { $Buffer }
+        IsReplaced = [bool]$selectedCmd
+        SelectedCommand = $selectedCmd
+        Candidates = $res.Candidates
+        LatencyMs = $res.LatencyMs
+    }
+}
+
+Export-ModuleMember -Cmdlet Get-TinyIntent, Initialize-TinyIntent -Function Register-TinyIntentKeyHandler, Unregister-TinyIntentKeyHandler, Invoke-TinyShellBufferSimulation

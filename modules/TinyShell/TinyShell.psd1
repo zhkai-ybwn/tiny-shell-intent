@@ -29,7 +29,7 @@ Copyright = '(c) 2026 TinyShell Intent Project. All rights reserved.'
 Description = 'Offline lightweight semantic command intent suggestion plugin for Windows PowerShell 7.'
 
 # Minimum version of the PowerShell engine required by this module
-PowerShellVersion = '7.0'
+PowerShellVersion = '7.4'
 
 # Assemblies that must be loaded prior to importing this module
 NestedModules = @('TinyShell.PowerShell.dll')
@@ -38,7 +38,7 @@ NestedModules = @('TinyShell.PowerShell.dll')
 CmdletsToExport = @('Get-TinyIntent', 'Initialize-TinyIntent')
 
 # Functions to export from this module
-FunctionsToExport = @('Register-TinyIntentKeyHandler', 'Unregister-TinyIntentKeyHandler')
+FunctionsToExport = @('Register-TinyIntentKeyHandler', 'Unregister-TinyIntentKeyHandler', 'Invoke-TinyShellBufferSimulation')
 
 # List of all files packaged with this module
 FileList = @(

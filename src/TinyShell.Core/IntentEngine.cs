@@ -528,13 +528,32 @@ public class IntentEngine
                 }
             }
 
-            // Constraint 6: Ping / ICMP Reachability
+            // Constraint 6: Ping / ICMP Reachability vs Listening Ports vs Port Scanning
             if (hasIcmpOrPing)
             {
                 if (intentId == "net_ping_host")
                     fused += 0.35;
                 else if (intentId is "net_test_port" or "net_ip_config")
                     fused *= 0.50;
+            }
+
+            bool hasListeningQuery = lowerQ.Contains("port") &&
+                (words.Any(w => w is "process" or "using" or "listening" or "occupying" or "who" or "what" or "which" or "pid") || lowerQ.Contains("running on"));
+            bool hasTestConnQuery = words.Any(w => w is "test" or "connect" or "reach" or "remote" or "ping" or "server" or "gateway");
+
+            if (hasListeningQuery && !hasTestConnQuery)
+            {
+                if (intentId == "net_listening_ports")
+                    fused += 0.45;
+                else if (intentId == "net_test_port")
+                    fused *= 0.30;
+            }
+            else if (hasTestConnQuery && lowerQ.Contains("port"))
+            {
+                if (intentId == "net_test_port")
+                    fused += 0.35;
+                else if (intentId == "net_listening_ports")
+                    fused *= 0.40;
             }
 
             // Constraint 7: Status Query vs Mutation

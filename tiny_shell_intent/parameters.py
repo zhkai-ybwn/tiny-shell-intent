@@ -131,12 +131,14 @@ def extract_parameters_from_query(
     # Mask structured entities (IP addresses, URLs) to avoid mis-extracting subfields
     masked_q, entity_map = mask_structured_entities(clean_q)
 
-    # 1. net_test_port (requires 'host' and 'port')
-    if intent.id == "net_test_port":
+    # 1. net_test_port & net_listening_ports
+    if intent.id in ("net_test_port", "net_listening_ports"):
         # Port extraction: STRICT context required. Never extract arbitrary digits!
         port_match = re.search(r"\bport\s*[:=]?\s*(\d{1,5})\b", masked_q, re.IGNORECASE)
         if not port_match:
             port_match = re.search(r"\bon\s+port\s+(\d{1,5})\b", masked_q, re.IGNORECASE)
+        if not port_match:
+            port_match = re.search(r"\busing\s+port\s+(\d{1,5})\b", masked_q, re.IGNORECASE)
         if not port_match:
             port_match = re.search(r"\b(\d{1,5})\s*/(?:tcp|udp)\b", masked_q, re.IGNORECASE)
         if not port_match:
@@ -146,16 +148,17 @@ def extract_parameters_from_query(
         if port_match:
             extracted["port"] = port_match.group(1)
 
-        # Host extraction
-        ip_m = IPV4_REGEX.search(clean_q)
-        if ip_m:
-            extracted["host"] = ip_m.group(0)
-        elif re.search(r"\blocalhost\b", clean_q, re.IGNORECASE):
-            extracted["host"] = "localhost"
-        else:
-            host_m = re.search(r"\b(?:on|to|host|server|at)\s+([a-zA-Z0-9.-]+)\b", clean_q, re.IGNORECASE)
-            if host_m and not host_m.group(1).isdigit():
-                extracted["host"] = host_m.group(1)
+        # Host extraction (for net_test_port only)
+        if intent.id == "net_test_port":
+            ip_m = IPV4_REGEX.search(clean_q)
+            if ip_m:
+                extracted["host"] = ip_m.group(0)
+            elif re.search(r"\blocalhost\b", clean_q, re.IGNORECASE):
+                extracted["host"] = "localhost"
+            else:
+                host_m = re.search(r"\b(?:on|to|host|server|at)\s+([a-zA-Z0-9.-]+)\b", clean_q, re.IGNORECASE)
+                if host_m and not host_m.group(1).isdigit():
+                    extracted["host"] = host_m.group(1)
 
     # 2. net_ping_host & net_trace_route (host)
     elif intent.id in ("net_ping_host", "net_trace_route"):
