@@ -93,4 +93,6 @@ class FuzzyMatcher(BaseMatcher):
             risk_level=intent.risk_level.value,
             category=intent.category,
             risk_reason=intent.risk_reason,
+            command_template=intent.command,
+            is_complete=len(intent.parameter_slots) == 0,
         )

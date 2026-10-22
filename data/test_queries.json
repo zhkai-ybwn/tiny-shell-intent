@@ -490,5 +490,72 @@
     "query": "!@#$%^&*",
     "expected_intent_id": null,
     "type": "edge_case"
+  },
+  {
+    "id": "near_ood_01",
+    "query": "def quicksort(arr): return arr",
+    "expected_intent_id": null,
+    "type": "out_of_domain",
+    "subtype": "near_domain_code"
+  },
+  {
+    "id": "near_ood_02",
+    "query": "console.log(\"hello world\")",
+    "expected_intent_id": null,
+    "type": "out_of_domain",
+    "subtype": "near_domain_code"
+  },
+  {
+    "id": "near_ood_03",
+    "query": "apt-get install nginx -y",
+    "expected_intent_id": null,
+    "type": "out_of_domain",
+    "subtype": "near_domain_linux"
+  },
+  {
+    "id": "near_ood_04",
+    "query": "chmod -R 777 /var/www",
+    "expected_intent_id": null,
+    "type": "out_of_domain",
+    "subtype": "near_domain_linux"
+  },
+  {
+    "id": "near_ood_05",
+    "query": "how to reverse a linked list in c",
+    "expected_intent_id": null,
+    "type": "out_of_domain",
+    "subtype": "near_domain_dsa"
+  },
+  {
+    "id": "near_ood_06",
+    "query": "git commit -m \"update docs\"",
+    "expected_intent_id": null,
+    "type": "out_of_domain",
+    "subtype": "near_domain_git"
+  },
+  {
+    "id": "unicode_01",
+    "query": "列出当前目录的所有文件",
+    "expected_intent_id": null,
+    "type": "out_of_domain",
+    "subtype": "non_latin_unicode"
+  },
+  {
+    "id": "param_01",
+    "query": "test port 8080 on localhost",
+    "expected_intent_id": "net_test_port",
+    "type": "parameterized"
+  },
+  {
+    "id": "param_02",
+    "query": "ping 192.168.1.1",
+    "expected_intent_id": "net_ping_host",
+    "type": "parameterized"
+  },
+  {
+    "id": "param_03",
+    "query": "kill chrome",
+    "expected_intent_id": "proc_kill_name",
+    "type": "parameterized"
   }
 ]

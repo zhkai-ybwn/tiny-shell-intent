@@ -58,17 +58,12 @@ class ModelMatcher(BaseMatcher):
             exemplar_texts.append(intent.description)
             exemplar_indices.append(idx)
 
-            # Exemplar 2: Intent phrases
+            # Exemplar 2: Intent phrases (canonical semantic expressions)
             for phrase in intent.intent_phrases:
                 clean_p = phrase.strip()
                 if clean_p:
                     exemplar_texts.append(clean_p)
                     exemplar_indices.append(idx)
-
-            # Exemplar 3: Keywords
-            if intent.keywords:
-                exemplar_texts.append(" ".join(intent.keywords))
-                exemplar_indices.append(idx)
 
         # Batch encode all exemplars
         raw_embs = self.model.encode(exemplar_texts)
@@ -115,6 +110,8 @@ class ModelMatcher(BaseMatcher):
                     risk_level=intent.risk_level.value,
                     category=intent.category,
                     risk_reason=intent.risk_reason,
+                    command_template=intent.command,
+                    is_complete=len(intent.parameter_slots) == 0,
                 )
             )
 

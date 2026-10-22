@@ -3,7 +3,7 @@
 import argparse
 import sys
 from typing import Optional
-from tiny_shell_intent import IntentEngine, format_risk_badge, RiskLevel
+from tiny_shell_intent import IntentEngine, format_risk_badge, RiskLevel, ConfidenceLevel
 
 # ANSI escape sequences for CLI styling
 CYAN = "\033[96m"
@@ -36,14 +36,22 @@ def display_results(result, use_color: bool = True) -> None:
         print(f" {YELLOW}Warning: Empty input query. Please enter a command intent.{RESET}\n")
         return
 
-    if result.is_out_of_domain:
-        print(f" {YELLOW}[Out-of-Domain / Low Confidence]{RESET} Query '{q}' does not appear to match known shell commands.")
-        if not result.candidates:
-            print(f" {DIM}No matching shell candidates above threshold.{RESET}\n")
-            return
-        print(f" {DIM}Showing closest low-confidence fallback candidates:{RESET}")
-
     print(f"{BOLD}Query:{RESET} \"{q}\"  {DIM}(mode={result.mode}, latency={latency:.2f} ms){RESET}")
+
+    # Handle rejected / Out-of-Domain queries
+    if result.is_rejected:
+        print(f" {RED}[REJECTED / OUT-OF-DOMAIN]{RESET} Query could not be reliably mapped to any valid shell command.")
+        if result.rejection_reason:
+            print(f" {DIM}Rejection Reason: {result.rejection_reason}{RESET}")
+
+        if result.debug_candidates:
+            print(f"\n {YELLOW}[DEBUG / INSPECTION ONLY — NOT FOR COMPLETION]:{RESET}")
+            for rank, cand in enumerate(result.debug_candidates, 1):
+                risk_badge = format_risk_badge(cand.risk_level, use_color=use_color)
+                score_pct = f"{cand.score * 100:.1f}%"
+                print(f"   {rank}. {risk_badge} {DIM}(score={score_pct}, {cand.source}) {cand.command}{RESET}")
+        print(f"\n {DIM}[Notice] Input was rejected. Downstream plugins will receive 0 actionable completions.{RESET}\n")
+        return
 
     if not result.candidates:
         print(f" {YELLOW}No matching command candidates found.{RESET}\n")
@@ -54,9 +62,20 @@ def display_results(result, use_color: bool = True) -> None:
         src_tag = f"{MAGENTA}[{cand.source.upper()}]{RESET}"
         score_pct = f"{cand.score * 100:.1f}%"
 
-        print(f"\n  {BOLD}{rank}.{RESET} {risk_badge} {src_tag} {CYAN}{BOLD}{cand.command}{RESET}")
+        # Parameter completeness status
+        if cand.is_complete and cand.rendered_command:
+            param_status = f"{GREEN}[READY]{RESET}"
+        elif cand.parameters:
+            param_status = f"{YELLOW}[PARTIAL PARAMS]{RESET}"
+        else:
+            param_status = f"{DIM}[TEMPLATE]{RESET}"
+
+        print(f"\n  {BOLD}{rank}.{RESET} {risk_badge} {src_tag} {param_status} {CYAN}{BOLD}{cand.command}{RESET}")
         print(f"     {BOLD}Score:{RESET} {score_pct}  |  {BOLD}Category:{RESET} {cand.category}  |  {BOLD}Intent ID:{RESET} {cand.intent_id}")
         print(f"     {BOLD}Desc:{RESET}  {cand.description}")
+
+        if cand.parameters:
+            print(f"     {BOLD}Params:{RESET} {cand.parameters}")
 
         if cand.risk_level in (RiskLevel.DANGEROUS.value, RiskLevel.WARNING.value) and cand.risk_reason:
             badge_color = RED if cand.risk_level == RiskLevel.DANGEROUS.value else YELLOW
@@ -96,7 +115,7 @@ def run_interactive(engine: IntentEngine, initial_mode: str = "hybrid") -> None:
                 print("  Type any command abbreviation or natural language phrase:")
                 print("    - 'kill -9'")
                 print("    - 'which process uses high cpu'")
-                print("    - 'test if port 8080 is listening'")
+                print("    - 'test port 8080 on localhost'")
                 print("    - 'rm -rf'")
                 print("    - 'how many lines in logfile'")
                 print("  Special commands:")
