@@ -267,6 +267,17 @@ def extract_parameters_from_query(
             extracted["variable_name"] = m.group(1)
             extracted["value"] = m.group(2)
 
+    # 10. Process start
+    elif intent.id == "proc_start":
+        m = re.search(r"\b(?:start|launch|run|open|exec)\s+([a-zA-Z_][a-zA-Z0-9_.-]*)\b", clean_q, re.IGNORECASE)
+        if m:
+            cand = m.group(1).lower()
+            if cand not in ("a", "the", "program", "app", "application", "as", "with", "process"):
+                extracted["program"] = cand
+        args_m = re.search(r"\b(?:with\s+arguments?|args?)\s+(.+)$", clean_q, re.IGNORECASE)
+        if args_m:
+            extracted["args"] = args_m.group(1).strip()
+
     # Validate all extracted parameters
     validated: Dict[str, Any] = {}
     for name, raw_val in extracted.items():
@@ -309,7 +320,11 @@ def render_command_safely(
         if slot.name not in parameters:
             if slot.required:
                 return None
-            continue
+            else:
+                # If optional slot is omitted, clean up its parameter clause (e.g. -ArgumentList "<args>")
+                rendered = re.sub(rf'\s*-[a-zA-Z0-9_]+\s+["\']?{re.escape(placeholder)}["\']?', '', rendered)
+                rendered = rendered.replace(f'"{placeholder}"', '').replace(placeholder, '').strip()
+                continue
 
         val = parameters[slot.name]
         if slot.type == "int":

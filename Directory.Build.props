@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup>
+    <HandlePackageFileConflicts>false</HandlePackageFileConflicts>
+  </PropertyGroup>
+</Project>

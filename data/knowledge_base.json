@@ -179,7 +179,14 @@
         "type": "string",
         "required": true,
         "placeholder": "<program>",
-        "description": "Program executable"
+        "description": "Program executable to start"
+      },
+      {
+        "name": "args",
+        "type": "string",
+        "required": false,
+        "placeholder": "<args>",
+        "description": "Optional command-line arguments"
       }
     ]
   },

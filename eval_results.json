@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-22 17:41:50",
+  "timestamp": "2026-10-22 18:53:42",
   "resource": {
     "model_path": "models\\potion-base-2M",
     "disk_size_bytes": 8010076,
@@ -11,13 +11,13 @@
       "README.md": "0.00 MB",
       "tokenizer.json": "0.43 MB"
     },
-    "engine_init_time_ms": 0.74,
-    "model_load_time_ms": 790.28,
-    "total_cold_startup_ms": 791.01,
-    "memory_rss_baseline_mb": 54.27,
-    "memory_rss_engine_only_mb": 54.44,
-    "memory_rss_loaded_mb": 97.43,
-    "memory_rss_delta_mb": 43.16
+    "engine_init_time_ms": 1.14,
+    "model_load_time_ms": 1108.84,
+    "total_cold_startup_ms": 1109.98,
+    "memory_rss_baseline_mb": 54.54,
+    "memory_rss_engine_only_mb": 54.68,
+    "memory_rss_loaded_mb": 98.05,
+    "memory_rss_delta_mb": 43.51
   },
   "historical_baseline": {
     "rule": {
@@ -157,40 +157,40 @@
   },
   "latency": {
     "rule": {
-      "mean_ms": 0.036,
-      "p50_ms": 0.032,
-      "p90_ms": 0.051,
-      "p95_ms": 0.082,
-      "p99_ms": 0.099,
-      "min_ms": 0.002,
-      "max_ms": 0.11
+      "mean_ms": 0.041,
+      "p50_ms": 0.035,
+      "p90_ms": 0.071,
+      "p95_ms": 0.098,
+      "p99_ms": 0.124,
+      "min_ms": 0.003,
+      "max_ms": 0.237
     },
     "fuzzy": {
-      "mean_ms": 0.799,
-      "p50_ms": 0.782,
-      "p90_ms": 1.146,
-      "p95_ms": 1.212,
-      "p99_ms": 1.292,
+      "mean_ms": 1.021,
+      "p50_ms": 0.938,
+      "p90_ms": 1.55,
+      "p95_ms": 1.774,
+      "p99_ms": 2.51,
       "min_ms": 0.003,
-      "max_ms": 1.733
+      "max_ms": 5.462
     },
     "model": {
-      "mean_ms": 0.125,
-      "p50_ms": 0.131,
-      "p90_ms": 0.159,
-      "p95_ms": 0.173,
-      "p99_ms": 0.219,
+      "mean_ms": 0.245,
+      "p50_ms": 0.206,
+      "p90_ms": 0.432,
+      "p95_ms": 0.5,
+      "p99_ms": 0.635,
       "min_ms": 0.003,
-      "max_ms": 0.449
+      "max_ms": 0.779
     },
     "hybrid": {
-      "mean_ms": 0.98,
-      "p50_ms": 1.026,
-      "p90_ms": 1.442,
-      "p95_ms": 1.525,
-      "p99_ms": 2.12,
+      "mean_ms": 1.533,
+      "p50_ms": 1.498,
+      "p90_ms": 2.557,
+      "p95_ms": 2.953,
+      "p99_ms": 3.671,
       "min_ms": 0.003,
-      "max_ms": 2.862
+      "max_ms": 5.967
     },
     "cache_hit": {
       "mean_ms": 0.001,
@@ -200,11 +200,11 @@
       "p99_ms": 0.001
     },
     "short_circuit_exact": {
-      "mean_ms": 0.04,
-      "p50_ms": 0.039,
-      "p90_ms": 0.042,
-      "p95_ms": 0.045,
-      "p99_ms": 0.056
+      "mean_ms": 0.056,
+      "p50_ms": 0.046,
+      "p90_ms": 0.087,
+      "p95_ms": 0.125,
+      "p99_ms": 0.146
     }
   },
   "special_cases": {

@@ -1,0 +1,7 @@
+<Project>
+  <Target Name="_ClearPackageConflictPlatformManifests" BeforeTargets="_HandlePackageFileConflicts">
+    <ItemGroup>
+      <PackageConflictPlatformManifests Remove="@(PackageConflictPlatformManifests)" />
+    </ItemGroup>
+  </Target>
+</Project>

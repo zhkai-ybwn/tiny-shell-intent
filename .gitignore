@@ -218,3 +218,15 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# .NET / C# build outputs
+**/bin/
+**/obj/
+*.user
+*.suo
+TestResults/
+
+# Published module binary outputs
+modules/TinyShell/*.dll
+modules/TinyShell/data/
+modules/TinyShell/models/
