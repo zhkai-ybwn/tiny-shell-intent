@@ -1,6 +1,7 @@
 """IntentEngine combining Rule, Fuzzy, and Model matchers into a unified pipeline."""
 
 import re
+from copy import deepcopy
 import time
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
@@ -97,7 +98,7 @@ class IntentEngine:
         if cache_key in self._cache:
             cached_res = self._cache[cache_key]
             # Fast return from cache
-            return cached_res
+            return deepcopy(cached_res)
 
         # 2. Input normalization and validation
         if not query or not query.strip():
@@ -583,4 +584,4 @@ class IntentEngine:
             # Evict oldest entry
             oldest_key = next(iter(self._cache))
             self._cache.pop(oldest_key, None)
-        self._cache[key] = res
+        self._cache[key] = deepcopy(res)

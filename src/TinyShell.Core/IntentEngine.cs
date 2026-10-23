@@ -122,7 +122,7 @@ public class IntentEngine
         {
             if (_cache.TryGetValue(cacheKey, out var cached))
             {
-                return cached;
+                return cached.Copy();
             }
         }
 
@@ -709,7 +709,7 @@ public class IntentEngine
         {
             if (_cache.ContainsKey(key))
             {
-                _cache[key] = res;
+                _cache[key] = res.Copy();
                 return;
             }
 
@@ -723,7 +723,7 @@ public class IntentEngine
                 }
             }
 
-            _cache[key] = res;
+            _cache[key] = res.Copy();
             _cacheOrder.AddLast(key);
         }
     }

@@ -6,7 +6,7 @@ namespace TinyShell.Core.Parameters;
 public static class ParameterExtractor
 {
     private static readonly Regex PowerShellInjectionPattern = new(
-        @"[;&|`$\n\r\x00]|(\$\()|(`\()|(\$\{[^}]*\})|(\[scriptblock\])",
+        @"[;&|`$\n\r\x00\u2018-\u201f]|(\$\()|(`\()|(\$\{[^}]*\})|(\[scriptblock\])",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private static readonly Regex Ipv4Pattern = new(
@@ -61,6 +61,12 @@ public static class ParameterExtractor
         if (PowerShellInjectionPattern.IsMatch(sVal))
         {
             error = $"Dangerous command injection sequence detected in '{slot.Name}'";
+            return false;
+        }
+
+        if (slot.Name == "variable_name" && !Regex.IsMatch(sVal, @"\A[A-Za-z_][A-Za-z0-9_]*\z"))
+        {
+            error = "Invalid environment variable identifier";
             return false;
         }
 
@@ -309,21 +315,11 @@ public static class ParameterExtractor
         // 9. Single file ops
         else if (intent.Id is "file_delete_single" or "file_test_exists" or "file_read_head" or "file_read_tail" or "file_count_lines" or "file_checksum_sha256")
         {
-            var fileM = FileExtRegex.Match(cleanQ);
-            if (fileM.Success)
+            string? targetFile = ExtractFileTarget(cleanQ);
+            if (targetFile != null)
             {
-                string targetFile = fileM.Value;
                 string slotName = slotsByName.ContainsKey("path") ? "path" : "file";
                 extracted[slotName] = targetFile;
-            }
-            else
-            {
-                var qStr = Regex.Match(cleanQ, @"['""]([^'""]+)['""]");
-                if (qStr.Success)
-                {
-                    string slotName = slotsByName.ContainsKey("path") ? "path" : "file";
-                    extracted[slotName] = qStr.Groups[1].Value;
-                }
             }
         }
         // 10. env_get_value
@@ -333,7 +329,7 @@ public static class ParameterExtractor
             foreach (var token in tokens)
             {
                 string cleanToken = token.Trim('$', '%', ':', ';', ',', '.');
-                if (cleanToken.Length >= 2 && cleanToken.All(char.IsUpper) && cleanToken is not ("GET" or "CHECK" or "WHAT" or "SET" or "TO" or "IS" or "ENV"))
+                if (Regex.IsMatch(cleanToken, @"\A[A-Z_][A-Z0-9_]+\z") && cleanToken is not ("GET" or "CHECK" or "WHAT" or "SET" or "TO" or "IS" or "ENV"))
                 {
                     extracted["variable_name"] = cleanToken;
                     break;
@@ -377,6 +373,38 @@ public static class ParameterExtractor
         return (validated, isComplete);
     }
 
+    private static string? ExtractFileTarget(string query)
+    {
+        // Do not search inside a path for a basename: that can change the target.
+        var quoted = Regex.Matches(query, "\"(?<double>[^\"]+)\"|'(?<single>(?:[^']|'')+)'");
+        if (quoted.Count > 0)
+        {
+            if (quoted.Count != 1) return null;
+            var match = quoted[0];
+            // A second unquoted target is ambiguous too.
+            string remainder = query.Remove(match.Index, match.Length);
+            if (remainder.Contains('"') || remainder.Contains('\'') || FindUnquotedFileTargets(remainder).Count != 0)
+                return null;
+            return match.Groups["double"].Success
+                ? match.Groups["double"].Value
+                : match.Groups["single"].Value.Replace("''", "'");
+        }
+        if (query.Contains('"') || query.Contains('\'')) return null;
+        var targets = FindUnquotedFileTargets(query);
+        return targets.Count == 1 ? targets[0] : null;
+    }
+
+    private static List<string> FindUnquotedFileTargets(string query)
+    {
+        return query.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)
+            .Where(token =>
+            {
+                var match = FileExtRegex.Match(token);
+                return token.Contains('\\') || token.Contains('/') || (match.Success && match.Value == token);
+            })
+            .ToList();
+    }
+
     public static string? RenderCommandSafely(string template, CommandIntent intent, Dictionary<string, object> parameters)
     {
         if (parameters.Count == 0 && intent.ParameterSlots.Count > 0)
@@ -410,7 +438,13 @@ public static class ParameterExtractor
                 }
             }
 
-            if (slot.Type == "int")
+            if (slot.Name == "variable_name" && intent.Id is "env_get_value" or "env_set_temp")
+            {
+                string name = val.ToString() ?? "";
+                if (!Regex.IsMatch(name, @"\A[A-Za-z_][A-Za-z0-9_]*\z")) return null;
+                rendered = rendered.Replace(placeholder, name);
+            }
+            else if (slot.Type == "int")
             {
                 rendered = rendered.Replace(placeholder, val.ToString());
             }

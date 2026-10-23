@@ -29,6 +29,9 @@ function Get-DotNetSdkCommand {
 $dotnetCmd = Get-DotNetSdkCommand
 Write-Host "Building TinyShell in Release configuration using $dotnetCmd..." -ForegroundColor Cyan
 & $dotnetCmd build (Join-Path $repoRoot "src\TinyShell.PowerShell\TinyShell.PowerShell.csproj") -c Release
+if ($LASTEXITCODE -ne 0) {
+    throw "TinyShell build failed with exit code $LASTEXITCODE. Module publishing aborted."
+}
 
 $releaseBin = Join-Path $repoRoot "src\TinyShell.PowerShell\bin\Release\net8.0"
 

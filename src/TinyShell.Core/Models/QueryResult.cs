@@ -74,6 +74,14 @@ public sealed class Candidate
 
     public Candidate() { }
 
+    internal Candidate Copy()
+    {
+        var copy = (Candidate)MemberwiseClone();
+        // Extracted parameter values are immutable strings or boxed integers.
+        copy.Parameters = new Dictionary<string, object>(Parameters);
+        return copy;
+    }
+
     public Candidate(
         string command,
         string intentId,
@@ -115,4 +123,12 @@ public sealed class QueryResult
 
     public Candidate? TopCandidate => Candidates.Count > 0 ? Candidates[0] : null;
     public Candidate? TopDebugCandidate => DebugCandidates.Count > 0 ? DebugCandidates[0] : null;
+
+    internal QueryResult Copy()
+    {
+        var copy = (QueryResult)MemberwiseClone();
+        copy.Candidates = Candidates.Select(candidate => candidate.Copy()).ToList();
+        copy.DebugCandidates = DebugCandidates.Select(candidate => candidate.Copy()).ToList();
+        return copy;
+    }
 }

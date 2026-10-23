@@ -6,7 +6,7 @@ from .schema import ParameterSlot, CommandIntent
 
 # Dangerous characters and patterns in PowerShell that could lead to command injection
 POWERSHELL_INJECTION_PATTERN = re.compile(
-    r"[;&|`$\n\r\x00]|(\$\()|(`\()|(\$\{[^}]*\})|(\[scriptblock\])",
+    r"[;&|`$\n\r\x00\u2018-\u201f]|(\$\()|(`\()|(\$\{[^}]*\})|(\[scriptblock\])",
     re.IGNORECASE,
 )
 
@@ -81,6 +81,9 @@ def validate_parameter_value(slot: ParameterSlot, val: Any) -> Tuple[bool, Any, 
     if POWERSHELL_INJECTION_PATTERN.search(s_val):
         return False, None, f"Dangerous command injection sequence detected in '{slot.name}'"
 
+    if slot.name == "variable_name" and not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", s_val):
+        return False, None, "Invalid environment variable identifier"
+
     if slot.type == "int":
         try:
             num = int(s_val)
@@ -107,6 +110,31 @@ def validate_parameter_value(slot: ParameterSlot, val: Any) -> Tuple[bool, Any, 
         return True, s_val, None
 
     return True, s_val, None
+
+
+def _unquoted_file_targets(query: str) -> List[str]:
+    return [token for token in query.split()
+            if "\\" in token or "/" in token or FILE_EXT_REGEX.fullmatch(token)]
+
+
+def _extract_file_target(query: str) -> Optional[str]:
+    """Keep full paths; ambiguous targets must not silently become basenames."""
+    quoted_pattern = (r'"(?P<double>[^"]+)"|' r"'(?P<single>(?:[^']|'')+)'")
+    quoted = list(re.finditer(quoted_pattern, query))
+    if quoted:
+        if len(quoted) != 1:
+            return None
+        match = quoted[0]
+        remainder = query[:match.start()] + query[match.end():]
+        if '"' in remainder or "'" in remainder or _unquoted_file_targets(remainder):
+            return None
+        if match.group("double") is not None:
+            return match.group("double")
+        return match.group("single").replace("''", "'")
+    if '"' in query or "'" in query:
+        return None
+    targets = _unquoted_file_targets(query)
+    return targets[0] if len(targets) == 1 else None
 
 
 def extract_parameters_from_query(
@@ -241,25 +269,17 @@ def extract_parameters_from_query(
 
     # 8. Single file operations: file_delete_single, file_test_exists, file_read_head, file_read_tail, etc.
     elif intent.id in ("file_delete_single", "file_test_exists", "file_read_head", "file_read_tail", "file_count_lines", "file_checksum_sha256"):
-        # Match explicit filename with extension (e.g. data.tmp, app.log, notes.txt)
-        file_m = FILE_EXT_REGEX.search(clean_q)
-        if file_m:
-            target_file = file_m.group(0)
+        target_file = _extract_file_target(clean_q)
+        if target_file is not None:
             slot_name = "path" if "path" in slots_by_name else "file"
             extracted[slot_name] = target_file
-        else:
-            # Check for quoted string
-            q_str = re.search(r"['\"]([^'\"]+)['\"]", clean_q)
-            if q_str:
-                slot_name = "path" if "path" in slots_by_name else "file"
-                extracted[slot_name] = q_str.group(1)
 
     # 9. Environment variable queries
     elif intent.id == "env_get_value":
         # Look for uppercase identifier (e.g. USERPROFILE, PATH, TEMP)
         for token in clean_q.split():
             clean_token = token.strip("$%:;,.")
-            if clean_token.isupper() and len(clean_token) >= 2 and clean_token not in ("GET", "CHECK", "WHAT", "SET", "TO", "IS", "ENV"):
+            if re.fullmatch(r"[A-Z_][A-Z0-9_]+", clean_token) and clean_token not in ("GET", "CHECK", "WHAT", "SET", "TO", "IS", "ENV"):
                 extracted["variable_name"] = clean_token
                 break
 
@@ -330,7 +350,12 @@ def render_command_safely(
                 continue
 
         val = parameters[slot.name]
-        if slot.type == "int":
+        if slot.name == "variable_name" and intent.id in ("env_get_value", "env_set_temp"):
+            name = str(val)
+            if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", name):
+                return None
+            rendered = rendered.replace(placeholder, name)
+        elif slot.type == "int":
             rendered = rendered.replace(placeholder, str(val))
         elif slot.type in ("hostname", "string", "path"):
             quoted_placeholder = f'"{placeholder}"'
